@@ -43,11 +43,13 @@
     "@kepler.gl/types": "3.0.0-alpha.0",
     "@kepler.gl/utils": "3.0.0-alpha.0",
     "@loaders.gl/core": "^3.0.9",
+    "@loaders.gl/gis": "^3.0.9",
     "@loaders.gl/gltf": "^3.0.9",
+    "@loaders.gl/wkt": "^3.0.9",
     "@luma.gl/constants": "^8.5.10",
     "@mapbox/geojson-normalize": "0.0.1",
-    "@nebula.gl/layers": "1.0.2-alpha.1",
     "@nebula.gl/edit-modes": "1.0.2-alpha.1",
+    "@nebula.gl/layers": "1.0.2-alpha.1",
     "@turf/bbox": "^6.0.1",
     "@turf/helpers": "^6.1.4",
     "@types/geojson": "^7946.0.7",
@@ -84,5 +86,8 @@
   "volta": {
     "node": "14.21.1",
     "yarn": "1.22.17"
+  },
+  "devDependencies": {
+    "@loaders.gl/wkt": "^3.4.14"
   }
 }
