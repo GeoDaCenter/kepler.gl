@@ -468,7 +468,7 @@ export function getFieldsFromData(data: RowData, fieldOrder: string[]): Field[] 
 
     const fieldMeta = metadata.find(m => m.key === field);
     let type = fieldMeta.type;
-    const {format} = fieldMeta.format;
+    const format = fieldMeta.format;
 
     // check if string is hex wkb
     if (type === AnalyzerDATA_TYPES.STRING) {
