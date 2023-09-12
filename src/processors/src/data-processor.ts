@@ -22,7 +22,7 @@ import * as arrow from 'apache-arrow';
 import {csvParseRows} from 'd3-dsv';
 import {DATA_TYPES as AnalyzerDATA_TYPES} from 'type-analyzer';
 import normalize from '@mapbox/geojson-normalize';
-import {ALL_FIELD_TYPES, DATASET_FORMATS, GUIDES_FILE_FORMAT_DOC} from '@kepler.gl/constants';
+import {ALL_FIELD_TYPES, DATASET_FORMATS, GUIDES_FILE_FORMAT_DOC, ARROW_GEO_METADATA_KEY} from '@kepler.gl/constants';
 import {ProcessorResult, Field} from '@kepler.gl/types';
 import {
   arrowDataTypeToAnalyzerDataType,
@@ -33,10 +33,15 @@ import {
   analyzerTypeToFieldType,
   getSampleForTypeAnalyze,
   getFieldsFromData,
-  toArray
+  toArray,
+  DataContainerInterface
 } from '@kepler.gl/utils';
 import {KeplerGlSchema, ParsedDataset, SavedMap, LoadedMap} from '@kepler.gl/schemas';
 import {Feature} from '@nebula.gl/edit-modes';
+import {ArrowLoader} from '@loaders.gl/arrow';
+import { load } from '@loaders.gl/core';
+
+import {ProcessFileDataContent} from './file-handler';
 
 // if any of these value occurs in csv, parse it to null;
 // const CSV_NULLS = ['', 'null', 'NULL', 'Null', 'NaN', '/N'];

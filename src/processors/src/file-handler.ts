@@ -30,7 +30,7 @@ import {
   processRowObject
 } from './data-processor';
 import {generateHashId, isPlainObject} from '@kepler.gl/utils';
-import {DATASET_FORMATS} from '@kepler.gl/constants';
+import {DATASET_FORMATS, ARROW_GEO_METADATA_KEY} from '@kepler.gl/constants';
 import {Loader} from '@loaders.gl/loader-utils';
 import {FileCacheItem, ValidKeplerGlMap} from './types';
 import {Feature, AddDataToMapPayload} from '@kepler.gl/types';
@@ -197,6 +197,7 @@ export async function readFileInBatches({
     csv: CSV_LOADER_OPTIONS,
     arrow: ARROW_LOADER_OPTIONS,
     json: JSON_LOADER_OPTIONS,
+    arrow: ARROW_LOADER_OPTIONS,
     metadata: true,
     ...loadOptions
   };
