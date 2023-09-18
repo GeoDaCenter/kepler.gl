@@ -22,7 +22,12 @@ import * as arrow from 'apache-arrow';
 import {csvParseRows} from 'd3-dsv';
 import {DATA_TYPES as AnalyzerDATA_TYPES} from 'type-analyzer';
 import normalize from '@mapbox/geojson-normalize';
-import {ALL_FIELD_TYPES, DATASET_FORMATS, GUIDES_FILE_FORMAT_DOC, ARROW_GEO_METADATA_KEY} from '@kepler.gl/constants';
+import {
+  ALL_FIELD_TYPES,
+  DATASET_FORMATS,
+  GUIDES_FILE_FORMAT_DOC,
+  ARROW_GEO_METADATA_KEY
+} from '@kepler.gl/constants';
 import {ProcessorResult, Field} from '@kepler.gl/types';
 import {
   arrowDataTypeToAnalyzerDataType,
