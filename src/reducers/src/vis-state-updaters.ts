@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import bbox from '@turf/bbox';
 import {console as Console} from 'global/window';
 import {disableStackCapturing, withTask} from 'react-palm/tasks';
 import cloneDeep from 'lodash.clonedeep';
@@ -2317,6 +2318,8 @@ export function setFeaturesUpdater(
   // if feature is part of a filter
   const filterId = feature && getFilterIdInFeature(feature);
   if (filterId && feature) {
+     // update bbox in feature.properties if GeoJson feature
+    if (feature.properties) feature.properties.bbox = bbox(feature);
     const featureValue = featureToFilterValue(feature, filterId);
     const filterIdx = state.filters.findIndex(fil => fil.id === filterId);
     // @ts-ignore
@@ -2338,6 +2341,8 @@ export const setSelectedFeatureUpdater = (
   state: VisState,
   {feature, selectionContext}: VisStateActions.SetSelectedFeatureUpdaterAction
 ): VisState => {
+  // update bbox in feature.properties if GeoJson feature
+  if (feature && feature.properties) feature.properties.bbox = bbox(feature);
   return {
     ...state,
     editor: {

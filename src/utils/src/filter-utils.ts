@@ -454,6 +454,14 @@ export const getPolygonFilterFunctor = (layer, filter, dataContainer) => {
         const pos = getCentroid({id});
         return pos.every(Number.isFinite) && isInPolygon(pos, filter.value);
       };
+    case LAYER_TYPES.geojson:
+      return data => {
+        if (layer.isInPolygon) {
+          return layer.isInPolygon(data, data.index, filter.value);
+        }
+        // show all geometries if can't apply filter
+        return true;
+      };
     default:
       return () => true;
   }
@@ -545,17 +553,24 @@ export function filterDataByFilterTypes(
   const filterFuncCaller = (filter: Filter) => filterFuncs[filter.id](filterContext);
 
   const numRows = dataContainer.numRows();
-  for (let i = 0; i < numRows; ++i) {
-    filterContext.index = i;
+  if (dynamicDomainFilters) {
+    for (let i = 0; i < numRows; ++i) {
+      filterContext.index = i;
 
-    const matchForDomain = dynamicDomainFilters && dynamicDomainFilters.every(filterFuncCaller);
-    if (matchForDomain) {
-      filteredIndexForDomain.push(filterContext.index);
+      const matchForDomain = dynamicDomainFilters && dynamicDomainFilters.every(filterFuncCaller);
+      if (matchForDomain) {
+        filteredIndexForDomain.push(filterContext.index);
+      }
     }
-
-    const matchForRender = cpuFilters && cpuFilters.every(filterFuncCaller);
-    if (matchForRender) {
-      filteredIndex.push(filterContext.index);
+  }
+  // TODO: with a index, we should be able to avoid iterate through all data
+  if (cpuFilters) {
+    for (let i = 0; i < numRows; ++i) {
+      filterContext.index = i;
+      const matchForRender = cpuFilters && cpuFilters.every(filterFuncCaller);
+      if (matchForRender) {
+        filteredIndex.push(filterContext.index);
+      }
     }
   }
 

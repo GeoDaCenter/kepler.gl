@@ -20,7 +20,9 @@
 
 import uniq from 'lodash.uniq';
 import {DATA_TYPES} from 'type-analyzer';
-
+import {Feature, Polygon} from 'geojson';
+import booleanWithin from '@turf/boolean-within';
+import {point as turfPoint} from '@turf/helpers';
 import Layer, {
   colorMaker,
   LayerBaseConfig,
@@ -37,7 +39,8 @@ import {
   getGeojsonDataMaps,
   getGeojsonBounds,
   getGeojsonFeatureTypes,
-  GeojsonDataMaps
+  GeojsonDataMaps,
+  getGeojsonMeanCenters
 } from './geojson-utils';
 import GeojsonLayerIcon from './geojson-layer-icon';
 import {
@@ -58,6 +61,7 @@ import {
 } from '@kepler.gl/types';
 import {KeplerTable} from '@kepler.gl/table';
 import {DataContainerInterface} from '@kepler.gl/utils';
+import { RowDataContainer } from 'src/utils/src/row-data-container';
 
 const SUPPORTED_ANALYZER_TYPES = {
   [DATA_TYPES.GEOMETRY]: true,
@@ -184,10 +188,12 @@ export default class GeoJsonLayer extends Layer {
   declare visConfigSettings: GeoJsonVisConfigSettings;
   declare meta: GeoJsonLayerMeta;
   dataToFeature: GeojsonDataMaps;
+  centroids: number[][];
 
   constructor(props) {
     super(props);
 
+    this.centroids = [];
     this.dataToFeature = [];
     this.registerVisConfig(geojsonVisConfigs);
     this.getPositionAccessor = (dataContainer: DataContainerInterface) =>
@@ -359,9 +365,31 @@ export default class GeoJsonLayer extends Layer {
     };
   }
 
+  getCentroids(): number[][] {
+    if (this.centroids.length === 0) {
+      this.centroids = getGeojsonMeanCenters(this.dataToFeature);
+    }
+    return this.centroids;
+  }
+
+  isInPolygon(data: RowDataContainer, index: number, polygon: Feature<Polygon>): Boolean {
+    if (this.centroids.length === 0 || !this.centroids[index]) {
+      return false;
+    }
+    const isReactangle = polygon.properties?.shape === 'Rectangle';
+    const point = this.centroids[index];
+    // check if point is in polygon
+    if (isReactangle && polygon.properties?.bbox) {
+      const [minX, minY, maxX, maxY] = polygon.properties?.bbox;
+      return point[0] >= minX && point[0] <= maxX && point[1] >= minY && point[1] <= maxY;
+    }
+    return booleanWithin(turfPoint(point), polygon);
+  }
+
   updateLayerMeta(dataContainer) {
     const getFeature = this.getPositionAccessor(dataContainer);
     this.dataToFeature = getGeojsonDataMaps(dataContainer, getFeature);
+    this.centroids = this.getCentroids();
 
     // get bounds from features
     const bounds = getGeojsonBounds(this.dataToFeature);

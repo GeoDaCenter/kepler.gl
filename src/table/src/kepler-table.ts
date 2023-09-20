@@ -329,6 +329,7 @@ class KeplerTable {
         };
       }, {});
 
+      // TODO apply index to narrow down the filter range
       filterResult = filterDataByFilterTypes(
         {dynamicDomainFilters, cpuFilters, filterFuncs},
         dataContainer
