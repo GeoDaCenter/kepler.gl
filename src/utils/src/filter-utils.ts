@@ -456,6 +456,9 @@ export const getPolygonFilterFunctor = (layer, filter, dataContainer) => {
       };
     case LAYER_TYPES.geojson:
       return data => {
+        if (filter.value.properties?.shape === 'Rectangle') {
+          return true;
+        }
         if (layer.isInPolygon) {
           return layer.isInPolygon(data, data.index, filter.value);
         }
@@ -553,9 +556,10 @@ export function filterDataByFilterTypes(
   const filterFuncCaller = (filter: Filter) => filterFuncs[filter.id](filterContext);
 
   const numRows = dataContainer.numRows();
+  const plainIndexes = dataContainer.getPlainIndex();
   if (dynamicDomainFilters) {
     for (let i = 0; i < numRows; ++i) {
-      filterContext.index = i;
+      filterContext.index = plainIndexes[i];
 
       const matchForDomain = dynamicDomainFilters && dynamicDomainFilters.every(filterFuncCaller);
       if (matchForDomain) {
@@ -566,7 +570,7 @@ export function filterDataByFilterTypes(
   // TODO: with a index, we should be able to avoid iterate through all data
   if (cpuFilters) {
     for (let i = 0; i < numRows; ++i) {
-      filterContext.index = i;
+      filterContext.index = plainIndexes[i];
       const matchForRender = cpuFilters && cpuFilters.every(filterFuncCaller);
       if (matchForRender) {
         filteredIndex.push(filterContext.index);

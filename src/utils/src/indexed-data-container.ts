@@ -110,7 +110,7 @@ export class IndexedDataContainer implements DataContainerInterface {
   }
 
   getPlainIndex(): number[] {
-    return this._indices.map((_, i) => i);
+    return this._indices;
   }
 
   flattenData(): any[][] {

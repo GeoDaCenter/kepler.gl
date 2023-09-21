@@ -20,6 +20,8 @@
 
 import normalize from '@mapbox/geojson-normalize';
 import bbox from '@turf/bbox';
+// import center from '@turf/center';
+// import centerOfMass from '@turf/center-of-mass';
 import {parseSync} from '@loaders.gl/core';
 import {WKBLoader, WKTLoader} from '@loaders.gl/wkt';
 import {binaryToGeometry} from '@loaders.gl/gis';
@@ -177,16 +179,20 @@ function getMeanCenterFromGeometries(geometries: Geometry[]): number[] {
  * @returns {number[][]} [[lng, lat], ...]
  */
 export function getGeojsonMeanCenters(dataToFeature: GeojsonDataMaps): number[][] {
+  console.time('getGeojsonMeanCenters');
   const meanCenters: number[][] = [];
   for (let i = 0; i < dataToFeature.length; i++) {
     const feature = dataToFeature[i];
     if (feature) {
+      // TODO: use line interpolate to get center of line for LineString
+      // meanCenters.push(centerOfMass(feature).geometry.coordinates);
       const geometries = feature.geometry.type === 'GeometryCollection' ?
         feature.geometry.geometries : [feature.geometry];
       const center = getMeanCenterFromGeometries(geometries);
       meanCenters.push(center);
     }
   }
+  console.timeEnd('getGeojsonMeanCenters');
   return meanCenters;
 }
 

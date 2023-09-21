@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import Flatbush from 'flatbush';
 import uniq from 'lodash.uniq';
 import {DATA_TYPES} from 'type-analyzer';
 import {Feature, Polygon} from 'geojson';
@@ -189,6 +190,7 @@ export default class GeoJsonLayer extends Layer {
   declare meta: GeoJsonLayerMeta;
   dataToFeature: GeojsonDataMaps;
   centroids: number[][];
+  static index = new Map<string, Flatbush>();
 
   constructor(props) {
     super(props);
@@ -365,9 +367,22 @@ export default class GeoJsonLayer extends Layer {
     };
   }
 
+  getSpatialIndex() {
+    if (!GeoJsonLayer.index.get(this.id) && this.centroids.length > 0) {
+      const index = new Flatbush(this.centroids.length);
+      this.centroids.forEach(c => index?.add(c[0], c[1], c[0], c[1]));
+      index.finish();
+      GeoJsonLayer.index.set(this.id, index);
+    }
+    return GeoJsonLayer.index.get(this.id);
+  }
+
   getCentroids(): number[][] {
     if (this.centroids.length === 0) {
       this.centroids = getGeojsonMeanCenters(this.dataToFeature);
+      console.time('build spatial index');
+      this.getSpatialIndex();
+      console.timeEnd('build spatial index');
     }
     return this.centroids;
   }
@@ -376,6 +391,8 @@ export default class GeoJsonLayer extends Layer {
     if (this.centroids.length === 0 || !this.centroids[index]) {
       return false;
     }
+    // check if index is in existed spatial index query
+
     const isReactangle = polygon.properties?.shape === 'Rectangle';
     const point = this.centroids[index];
     // check if point is in polygon
@@ -390,7 +407,6 @@ export default class GeoJsonLayer extends Layer {
     const getFeature = this.getPositionAccessor(dataContainer);
     this.dataToFeature = getGeojsonDataMaps(dataContainer, getFeature);
     this.centroids = this.getCentroids();
-
     // get bounds from features
     const bounds = getGeojsonBounds(this.dataToFeature);
     // if any of the feature has properties.radius set to be true
