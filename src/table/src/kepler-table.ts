@@ -20,7 +20,6 @@
 
 import {console as Console} from 'global/console';
 import {ascending, descending} from 'd3-array';
-import {intersection} from 'lodash';
 import {
   TRIP_POINT_FIELDS,
   SORT_ORDER,
@@ -60,8 +59,7 @@ import {
   getLogDomain,
   getOrdinalDomain,
   getQuantileDomain,
-  DataContainerInterface,
-  createIndexedDataContainer
+  DataContainerInterface
 } from '@kepler.gl/utils';
 
 export type GpuFilter = {
@@ -322,39 +320,18 @@ class KeplerTable {
       const dynamicDomainFilters = shouldCalDomain ? filterRecord.dynamicDomain : null;
       const cpuFilters = shouldCalIndex ? filterRecord.cpu : null;
 
-      // use layer index to build IndexedDataContainer to narrow down the data
-      console.time('filterDataByFilterTypes');
-      const preFilteredIndexes: number[][] = [];
-      for (const filter of filters) {
-        if (filter.type === FILTER_TYPES.polygon) {
-          const filteredLayers = layers.filter(l => l.config.dataId === this.id);
-          // iterator over filteredLayers, and use it's spatial index to filter data
-          filteredLayers?.forEach(layer => {
-            const index = KeplerGlLayers.GeojsonLayer.index.get(layer.id);
-            const [minX, minY, maxX, maxY] = filter.value.properties.bbox;
-            const foundIndexes = index?.search(minX, minY, maxX, maxY) || [];
-            preFilteredIndexes.push(foundIndexes);
-          });
-        }
-      }
-      console.timeEnd('filterDataByFilterTypes');
-      const filteredDataContainer =
-        preFilteredIndexes.length > 0
-          ? createIndexedDataContainer(dataContainer, intersection(preFilteredIndexes.flat()))
-          : dataContainer;
-
       const filterFuncs = filters.reduce((acc, filter) => {
         const fieldIndex = getDatasetFieldIndexForFilter(this.id, filter);
         const field = fieldIndex !== -1 ? fields[fieldIndex] : null;
         return {
           ...acc,
-          [filter.id]: getFilterFunction(field, this.id, filter, layers, filteredDataContainer)
+          [filter.id]: getFilterFunction(field, this.id, filter, layers, dataContainer)
         };
       }, {});
 
       filterResult = filterDataByFilterTypes(
         {dynamicDomainFilters, cpuFilters, filterFuncs},
-        filteredDataContainer
+        opt?.filteredDataContainer ? opt.filteredDataContainer : dataContainer
       );
     }
 

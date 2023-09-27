@@ -858,6 +858,11 @@ export function setFilterUpdater(
         dataId: newDataIds
       };
 
+      // if (newFilter.gpu) {
+      //   newFilter = setFilterGpuMode(newFilter, state.filters);
+      //   newFilter = assignGpuChannel(newFilter, state.filters);
+      // }
+
       break;
     default:
       break;

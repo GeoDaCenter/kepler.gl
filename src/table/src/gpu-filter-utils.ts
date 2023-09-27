@@ -183,6 +183,9 @@ const getFilterValueAccessor = (
     if (!filter) {
       return 0;
     }
+    // if (filter.type === FILTER_TYPES.polygon) {
+    //   return getData(dc, d, -1, filter);
+    // }
     const fieldIndex = getDatasetFieldIndexForFilter(dataId, filter);
     const field = fields[fieldIndex];
 

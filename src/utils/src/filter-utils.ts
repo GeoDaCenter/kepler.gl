@@ -36,6 +36,7 @@ import {
   FILTER_VIEW_TYPES
 } from '@kepler.gl/constants';
 import {VisState} from '@kepler.gl/schemas';
+import {KeplerGlLayers} from '@kepler.gl/layers';
 import * as ScaleUtils from './data-scale-utils';
 import {h3IsValid} from 'h3-js';
 
@@ -63,6 +64,7 @@ import {DataContainerInterface} from './data-container-interface';
 import {generateHashId, set, toArray} from './utils';
 import {notNullorUndefined, timeToUnixMilli, unique} from './data-utils';
 import {getCentroid} from './h3-utils';
+import { IndexedDataContainer } from './indexed-data-container';
 
 export const durationSecond = 1000;
 export const durationMinute = durationSecond * 60;
@@ -456,13 +458,7 @@ export const getPolygonFilterFunctor = (layer, filter, dataContainer) => {
       };
     case LAYER_TYPES.geojson:
       return data => {
-        if (filter.value.properties?.shape === 'Rectangle') {
-          return true;
-        }
-        if (layer.isInPolygon) {
-          return layer.isInPolygon(data, data.index, filter.value);
-        }
-        // show all geometries if can't apply filter
+        // data are already filtered by spatial index
         return true;
       };
     default:
@@ -557,24 +553,17 @@ export function filterDataByFilterTypes(
 
   const numRows = dataContainer.numRows();
   const plainIndexes = dataContainer.getPlainIndex();
-  if (dynamicDomainFilters) {
-    for (let i = 0; i < numRows; ++i) {
-      filterContext.index = plainIndexes[i];
+  for (let i = 0; i < numRows; ++i) {
+    filterContext.index = plainIndexes[i];
 
-      const matchForDomain = dynamicDomainFilters && dynamicDomainFilters.every(filterFuncCaller);
-      if (matchForDomain) {
-        filteredIndexForDomain.push(filterContext.index);
-      }
+    const matchForDomain = dynamicDomainFilters && dynamicDomainFilters.every(filterFuncCaller);
+    if (matchForDomain) {
+      filteredIndexForDomain.push(filterContext.index);
     }
-  }
-  // TODO: with a index, we should be able to avoid iterate through all data
-  if (cpuFilters) {
-    for (let i = 0; i < numRows; ++i) {
-      filterContext.index = plainIndexes[i];
-      const matchForRender = cpuFilters && cpuFilters.every(filterFuncCaller);
-      if (matchForRender) {
-        filteredIndex.push(filterContext.index);
-      }
+
+    const matchForRender = cpuFilters && cpuFilters.every(filterFuncCaller);
+    if (matchForRender) {
+      filteredIndex.push(filterContext.index);
     }
   }
 
@@ -968,7 +957,7 @@ export function getDefaultFilterPlotType(filter: Filter): string | null {
  */
 export function applyFiltersToDatasets<
   K extends KeplerTableModel<K, L>,
-  L extends {config: {dataId: string | null}}
+  L extends {config: {dataId: string | null}, id: string}
 >(
   datasetIds: string[],
   datasets: {[id: string]: K},
@@ -981,9 +970,36 @@ export function applyFiltersToDatasets<
     const appliedFilters = filters.filter(d => shouldApplyFilter(d, dataId));
     const table = datasets[dataId];
 
+    // use layer index to build IndexedDataContainer to narrow down the data for filtering
+    console.time('filterDataByFilterTypes');
+    const preFilteredIndexes: number[][] = [];
+    for (const filter of filters) {
+      if (filter.type === FILTER_TYPES.polygon) {
+        // iterator over filteredLayers, and use it's spatial index to filter data
+        layersToFilter?.forEach(layer => {
+          const index = KeplerGlLayers.GeojsonLayer.spatialIndex.get(layer.id);
+          if (index) {
+            const foundIndexes = index.search(filter, layer) || [];
+            preFilteredIndexes.push(foundIndexes);
+          }
+        });
+      }
+    }
+    const filteredDataContainerIndexes = {};
+    // iterator preFilterIndexes
+    for (let i = 0; i < preFilteredIndexes.length; i++) {
+      const indexes = preFilteredIndexes[i];
+      for (let j = 0; j < indexes.length; j++) {
+        const index = indexes[j];
+        filteredDataContainerIndexes[index] = index;
+      }
+    }
+    const filteredDataContainer = Object.keys(filteredDataContainerIndexes).length > 0 ? new IndexedDataContainer(table.dataContainer, Object.values(filteredDataContainerIndexes)) : null;
+    console.timeEnd('filterDataByFilterTypes');
+
     return {
       ...acc,
-      [dataId]: table.filterTable(appliedFilters, layersToFilter, {})
+      [dataId]: table.filterTable(appliedFilters, layersToFilter, filteredDataContainer ? {filteredDataContainer} : {})
     };
   }, datasets);
 }
@@ -1127,7 +1143,8 @@ export function generatePolygonFilter<
     type: FILTER_TYPES.polygon,
     name,
     layerId,
-    value: featureToFilterValue(feature, filter.id, {isVisible: true})
+    value: featureToFilterValue(feature, filter.id, {isVisible: true}),
+    gpu: false
   };
 }
 
