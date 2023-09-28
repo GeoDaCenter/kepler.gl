@@ -32,8 +32,8 @@
   "dependencies": {
     "@kepler.gl/constants": "3.0.0-alpha.0",
     "@kepler.gl/types": "3.0.0-alpha.0",
-    "@loaders.gl/wkt": "3.0.9",
     "@loaders.gl/gis": "3.0.9",
+    "@loaders.gl/wkt": "3.0.9",
     "@luma.gl/constants": "^8.5.10",
     "@luma.gl/core": "^8.5.10",
     "@mapbox/geo-viewport": "^0.4.1",

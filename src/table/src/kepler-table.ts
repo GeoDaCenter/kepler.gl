@@ -20,13 +20,13 @@
 
 import {console as Console} from 'global/console';
 import {ascending, descending} from 'd3-array';
-
 import {
   TRIP_POINT_FIELDS,
   SORT_ORDER,
   ALL_FIELD_TYPES,
   ALTITUDE_FIELDS,
-  SCALE_TYPES
+  SCALE_TYPES,
+  FILTER_TYPES
 } from '@kepler.gl/constants';
 import {
   RGBColor,
@@ -41,7 +41,7 @@ import {
 
 import {getGpuFilterProps, getDatasetFieldIndexForFilter} from './gpu-filter-utils';
 
-import {Layer} from '@kepler.gl/layers';
+import {Layer, KeplerGlLayers} from '@kepler.gl/layers';
 import {
   generateHashId,
   getSortingFunction,
@@ -315,6 +315,7 @@ class KeplerTable {
     const shouldCalIndex = Boolean(this.changedFilters.cpu);
 
     let filterResult: FilterResult = {};
+    console.time('Filter');
     if (shouldCalDomain || shouldCalIndex) {
       const dynamicDomainFilters = shouldCalDomain ? filterRecord.dynamicDomain : null;
       const cpuFilters = shouldCalIndex ? filterRecord.cpu : null;
@@ -322,7 +323,6 @@ class KeplerTable {
       const filterFuncs = filters.reduce((acc, filter) => {
         const fieldIndex = getDatasetFieldIndexForFilter(this.id, filter);
         const field = fieldIndex !== -1 ? fields[fieldIndex] : null;
-
         return {
           ...acc,
           [filter.id]: getFilterFunction(field, this.id, filter, layers, dataContainer)
@@ -331,13 +331,14 @@ class KeplerTable {
 
       filterResult = filterDataByFilterTypes(
         {dynamicDomainFilters, cpuFilters, filterFuncs},
-        dataContainer
+        opt?.filteredDataContainer ? opt.filteredDataContainer : dataContainer
       );
     }
 
     this.filteredIndex = filterResult.filteredIndex || this.filteredIndex;
     this.filteredIndexForDomain =
       filterResult.filteredIndexForDomain || this.filteredIndexForDomain;
+    console.timeEnd('Filter');
 
     return this;
   }

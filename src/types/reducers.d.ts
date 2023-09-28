@@ -468,6 +468,7 @@ export type FilterDatasetOpt = {
   cpuOnly?: boolean;
   // ignore filter for domain calculation
   ignoreDomain?: boolean;
+  filteredDataContainer?: any;
 };
 
 /* DUPLICATES OF FILTER TYPES ABOVE, REMOVE ONCE TYPES ABOVE ARE FIXED */

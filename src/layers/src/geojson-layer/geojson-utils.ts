@@ -20,11 +20,13 @@
 
 import normalize from '@mapbox/geojson-normalize';
 import bbox from '@turf/bbox';
+import center from '@turf/center';
+import centerOfMass from '@turf/center-of-mass';
 import {parseSync} from '@loaders.gl/core';
 import {WKBLoader, WKTLoader} from '@loaders.gl/wkt';
 import {binaryToGeometry} from '@loaders.gl/gis';
 
-import {Feature, BBox} from 'geojson';
+import {Feature, BBox, Geometry} from 'geojson';
 import {getSampleData, parseGeometryFromArrow, RawArrowFeature} from '@kepler.gl/utils';
 
 export type GetFeature = (d: any) => Feature;
@@ -117,6 +119,82 @@ export function getGeojsonDataMaps(dataContainer: any, getFeature: GetFeature): 
   }
 
   return dataToFeature;
+}
+
+/**
+ * Get mean centers from geometries
+ * @param geometries geometries to get center from
+ * @returns
+ */
+function getMeanCenterFromGeometries(geometries: Geometry[]): number[] {
+  let centerX = 0;
+  let centerY = 0;
+  let numPoints = 0;
+  // iterate through geometries and get center
+  for (let i = 0; i < geometries.length; i++) {
+    const geometry = geometries[i];
+    if (geometry.type === 'Point') {
+      return geometry.coordinates;
+    } else if (geometry.type === 'MultiPoint' || geometry.type === 'LineString') {
+      numPoints = geometry.coordinates.length;
+      for (let j = 0; j < numPoints; j++) {
+        const point = geometry.coordinates[j];
+        centerX += point[0];
+        centerY += point[1];
+      }
+    } else if (geometry.type === 'MultiLineString' || geometry.type === 'Polygon') {
+      const numParts = geometry.coordinates.length;
+      for (let j = 0; j < numParts; j++) {
+        const part = geometry.coordinates[j];
+        numPoints += part.length;
+        for (let k = 0; k < part.length; k++) {
+          const point = part[k];
+          centerX += point[0];
+          centerY += point[1];
+        }
+      }
+    } else if (geometry.type === 'MultiPolygon') {
+      const numPolygons = geometry.coordinates.length;
+      for (let j = 0; j < numPolygons; j++) {
+        const numParts = geometry.coordinates[j].length;
+        for (let k = 0; k < numParts; k++) {
+          const part = geometry.coordinates[j][k];
+          numPoints += part.length;
+          for (let l = 0; l < part.length; l++) {
+            const point = part[l];
+            centerX += point[0];
+            centerY += point[1];
+          }
+        }
+      }
+    }
+  }
+  return numPoints > 0 ? [centerX / numPoints, centerY / numPoints] : [];
+}
+
+
+/**
+ * Get mean centroids of a geojson
+ * @param {GeojsonDataMaps} dataToFeature
+ * @returns {number[][]} [[lng, lat], ...]
+ */
+export function getGeojsonMeanCenters(dataToFeature: GeojsonDataMaps): number[][] {
+  console.time('getGeojsonMeanCenters');
+  const meanCenters: number[][] = [];
+  for (let i = 0; i < dataToFeature.length; i++) {
+    const feature = dataToFeature[i];
+    if (feature) {
+      // TODO: use line interpolate to get center of line for LineString
+      // meanCenters.push(centerOfMass(feature).geometry.coordinates);
+      const geometries = feature.geometry.type === 'GeometryCollection' ?
+        feature.geometry.geometries : [feature.geometry];
+      // const cent = getMeanCenterFromGeometries(geometries);
+      const cent = centerOfMass(feature).geometry.coordinates;
+      meanCenters.push(cent);
+    }
+  }
+  console.timeEnd('getGeojsonMeanCenters');
+  return meanCenters;
 }
 
 /**

@@ -18,9 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import Flatbush from 'flatbush';
 import uniq from 'lodash.uniq';
 import {DATA_TYPES} from 'type-analyzer';
-
+import {Feature, Polygon} from 'geojson';
+import booleanWithin from '@turf/boolean-within';
+import {point as turfPoint} from '@turf/helpers';
 import Layer, {
   colorMaker,
   LayerBaseConfig,
@@ -37,7 +40,8 @@ import {
   getGeojsonDataMaps,
   getGeojsonBounds,
   getGeojsonFeatureTypes,
-  GeojsonDataMaps
+  GeojsonDataMaps,
+  getGeojsonMeanCenters
 } from './geojson-utils';
 import GeojsonLayerIcon from './geojson-layer-icon';
 import {
@@ -45,7 +49,8 @@ import {
   HIGHLIGH_COLOR_3D,
   CHANNEL_SCALES,
   ColorRange,
-  LAYER_VIS_CONFIGS
+  LAYER_VIS_CONFIGS,
+  FILTER_TYPES
 } from '@kepler.gl/constants';
 import {
   VisConfigNumber,
@@ -54,10 +59,12 @@ import {
   VisConfigRange,
   VisConfigBoolean,
   Merge,
-  RGBColor
+  RGBColor,
+  PolygonFilter
 } from '@kepler.gl/types';
 import {KeplerTable} from '@kepler.gl/table';
 import {DataContainerInterface} from '@kepler.gl/utils';
+import {RowDataContainer} from 'src/utils/src/row-data-container';
 
 const SUPPORTED_ANALYZER_TYPES = {
   [DATA_TYPES.GEOMETRY]: true,
@@ -179,15 +186,25 @@ export const defaultElevation = 500;
 export const defaultLineWidth = 1;
 export const defaultRadius = 1;
 
+export type SpatialIndexProps = {
+  index: Flatbush;
+  search: (filter: PolygonFilter, layer: GeoJsonLayer) => number[];
+};
+
 export default class GeoJsonLayer extends Layer {
   declare config: GeoJsonLayerConfig;
   declare visConfigSettings: GeoJsonVisConfigSettings;
   declare meta: GeoJsonLayerMeta;
   dataToFeature: GeojsonDataMaps;
+  centroids: number[][];
+  static spatialIndex = new Map<string, SpatialIndexProps>();
+  queryIndexes: Map<number, boolean>;
 
   constructor(props) {
     super(props);
 
+    this.queryIndexes = new Map();
+    this.centroids = [];
     this.dataToFeature = [];
     this.registerVisConfig(geojsonVisConfigs);
     this.getPositionAccessor = (dataContainer: DataContainerInterface) =>
@@ -359,10 +376,78 @@ export default class GeoJsonLayer extends Layer {
     };
   }
 
+  getSpatialIndex() {
+    if (!GeoJsonLayer.spatialIndex.get(this.id) && this.centroids.length > 0) {
+      console.time('create spatial index');
+      const index = new Flatbush(this.centroids.length);
+      this.centroids.forEach(c => index?.add(c[0], c[1], c[0], c[1]));
+      index.finish();
+      GeoJsonLayer.spatialIndex.set(this.id, {
+        index,
+        search: (filter: PolygonFilter, layer: GeoJsonLayer): number[] => {
+          console.time('search');
+          const [minX, minY, maxX, maxY] = filter.value.properties.bbox;
+          const foundIndexes = index?.search(minX, minY, maxX, maxY) || [];
+          layer.queryIndexes.clear();
+          if (filter.value.properties?.shape === 'Rectangle') {
+            foundIndexes.forEach(i => layer.queryIndexes.set(i, true));
+          } else {
+            // use turf.js to check if point is in polygon
+            foundIndexes.forEach(i => {
+              const point = layer.centroids[i];
+              if (booleanWithin(turfPoint(point), filter.value)) {
+                layer.queryIndexes.set(i, true);
+              }
+            });
+          }
+          layer.queryIndexes.forEach((v, k) => {
+            const feat = layer.dataToFeature[k];
+            if (feat?.properties) {
+              feat.properties.selected = 1;
+            }
+          });
+          console.timeEnd('search');
+          return foundIndexes;
+        }
+      });
+      console.timeEnd('create spatial index');
+    }
+    return GeoJsonLayer.spatialIndex.get(this.id);
+  }
+
+  getCentroids(): number[][] {
+    if (this.centroids.length === 0) {
+      this.centroids = getGeojsonMeanCenters(this.dataToFeature);
+      console.time('build spatial index');
+      this.getSpatialIndex();
+      console.timeEnd('build spatial index');
+    }
+    return this.centroids;
+  }
+
+  // isInPolygon(data: RowDataContainer, index: number, polygon: Feature<Polygon>): Boolean {
+  //   if (this.centroids.length === 0 || !this.centroids[index]) {
+  //     return false;
+  //   }
+  //   const isReactangle = polygon.properties?.shape === 'Rectangle';
+  //   const point = this.centroids[index];
+  //   // check if point is in polygon using spatialIndex
+  //   if (isReactangle && GeoJsonLayer.spatialIndex.get(this.id)) {
+  //     const found = this.queryIndexes.get(index);
+  //     return found || false;
+  //   }
+  //   // without spatialIndex, use turf.js
+  //   if (isReactangle && polygon.properties?.bbox) {
+  //     const [minX, minY, maxX, maxY] = polygon.properties?.bbox;
+  //     return point[0] >= minX && point[0] <= maxX && point[1] >= minY && point[1] <= maxY;
+  //   }
+  //   return booleanWithin(turfPoint(point), polygon);
+  // }
+
   updateLayerMeta(dataContainer) {
     const getFeature = this.getPositionAccessor(dataContainer);
     this.dataToFeature = getGeojsonDataMaps(dataContainer, getFeature);
-
+    this.centroids = this.getCentroids();
     // get bounds from features
     const bounds = getGeojsonBounds(this.dataToFeature);
     // if any of the feature has properties.radius set to be true
