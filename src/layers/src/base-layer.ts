@@ -24,6 +24,7 @@ import keymirror from 'keymirror';
 import {DataFilterExtension} from '@deck.gl/extensions';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TextLayer} from '@deck.gl/layers';
+import {BrushGeoJsonExtension} from '@kepler.gl/deckgl-layers';
 
 import DefaultLayerIcon from './default-layer-icon';
 import {diffUpdateTriggers} from './layer-update';
@@ -203,7 +204,7 @@ export const LAYER_ID_LENGTH = 6;
 const MAX_SAMPLE_SIZE = 5000;
 const defaultDomain: [number, number] = [0, 1];
 const dataFilterExtension = new DataFilterExtension({filterSize: MAX_GPU_FILTERS});
-
+const brushGeoJsonExtension = new BrushGeoJsonExtension();
 const defaultDataAccessor = dc => d => d;
 const defaultGetFieldValue = (field, d) => field.valueAccessor(d);
 
@@ -1309,7 +1310,7 @@ class Layer {
       opacity: this.config.visConfig.opacity,
       highlightColor: this.config.highlightColor,
       // data filtering
-      extensions: [dataFilterExtension],
+      extensions: [dataFilterExtension, brushGeoJsonExtension],
       filterRange: gpuFilter ? gpuFilter.filterRange : undefined,
 
       // layer should be visible and if splitMap, shown in to one of panel

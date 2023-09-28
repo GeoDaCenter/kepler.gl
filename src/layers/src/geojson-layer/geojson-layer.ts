@@ -21,7 +21,6 @@
 import Flatbush from 'flatbush';
 import uniq from 'lodash.uniq';
 import {DATA_TYPES} from 'type-analyzer';
-import {Feature, Polygon} from 'geojson';
 import booleanWithin from '@turf/boolean-within';
 import {point as turfPoint} from '@turf/helpers';
 import Layer, {
@@ -64,7 +63,6 @@ import {
 } from '@kepler.gl/types';
 import {KeplerTable} from '@kepler.gl/table';
 import {DataContainerInterface} from '@kepler.gl/utils';
-import {RowDataContainer} from 'src/utils/src/row-data-container';
 
 const SUPPORTED_ANALYZER_TYPES = {
   [DATA_TYPES.GEOMETRY]: true,
@@ -199,10 +197,12 @@ export default class GeoJsonLayer extends Layer {
   centroids: number[][];
   static spatialIndex = new Map<string, SpatialIndexProps>();
   queryIndexes: Map<number, boolean>;
+  queryBounds: number[];
 
   constructor(props) {
     super(props);
 
+    this.queryBounds = [];
     this.queryIndexes = new Map();
     this.centroids = [];
     this.dataToFeature = [];
@@ -366,19 +366,24 @@ export default class GeoJsonLayer extends Layer {
     const dataAccessor = dc => d => ({index: d.properties.index});
     const accessors = this.getAttributeAccessors({dataAccessor, dataContainer});
 
+    const queryResultAccessor = d => {
+      // return (this?.queryBounds && this?.queryBounds?.length === 0) || d.properties.selected ? 1 : 0;
+      return Math.round(Math.random())
+    };
+
     return {
       data,
       getFilterValue: gpuFilter.filterValueAccessor(dataContainer)(
         indexAccessor,
         customFilterValueAccessor
       ),
+      getHighlighted: queryResultAccessor,
       ...accessors
     };
   }
 
   getSpatialIndex() {
     if (!GeoJsonLayer.spatialIndex.get(this.id) && this.centroids.length > 0) {
-      console.time('create spatial index');
       const index = new Flatbush(this.centroids.length);
       this.centroids.forEach(c => index?.add(c[0], c[1], c[0], c[1]));
       index.finish();
@@ -387,6 +392,7 @@ export default class GeoJsonLayer extends Layer {
         search: (filter: PolygonFilter, layer: GeoJsonLayer): number[] => {
           console.time('search');
           const [minX, minY, maxX, maxY] = filter.value.properties.bbox;
+          layer.queryBounds = [minX, minY, maxX, maxY];
           const foundIndexes = index?.search(minX, minY, maxX, maxY) || [];
           layer.queryIndexes.clear();
           if (filter.value.properties?.shape === 'Rectangle') {
@@ -400,17 +406,16 @@ export default class GeoJsonLayer extends Layer {
               }
             });
           }
-          layer.queryIndexes.forEach((v, k) => {
-            const feat = layer.dataToFeature[k];
-            if (feat?.properties) {
-              feat.properties.selected = 1;
-            }
-          });
+          // layer.queryIndexes.forEach((v, k) => {
+          //   const feat = layer.dataToFeature[k];
+          //   if (feat?.properties) {
+          //     feat.properties.selected = 1;
+          //   }
+          // });
           console.timeEnd('search');
           return foundIndexes;
         }
       });
-      console.timeEnd('create spatial index');
     }
     return GeoJsonLayer.spatialIndex.get(this.id);
   }
@@ -503,7 +508,8 @@ export default class GeoJsonLayer extends Layer {
 
     const updateTriggers = {
       ...this.getVisualChannelUpdateTriggers(),
-      getFilterValue: gpuFilter.filterValueUpdateTriggers
+      getFilterValue: gpuFilter.filterValueUpdateTriggers,
+      getHighlighted: this.queryBounds
     };
 
     const defaultLayerProps = this.getDefaultDeckLayerProps(opts);
