@@ -219,10 +219,8 @@ export function getGpuFilterProps(filters: Filter[], dataId: string, fields: Fie
     );
 
     if (filter?.type === FILTER_TYPES.polygon) {
-      filterRange[i][0] = 1;
-      // get a number that is larger than 1 and changed when bbox changes
-      filterRange[i][1] = 1 + Math.abs(filter.value.properties.bbox.reduce((accu, d) => accu + d, 0));
-      console.log(filterRange)
+      filterRange[i][0] = filter.value.properties.bbox[0];
+      filterRange[i][1] = filter.value.properties.bbox[2];
       triggers[`gpuFilter_${i}`] = filter.id;
     } else {
       filterRange[i][0] = filter ? filter.value[0] - filter.domain?.[0] : 0;

@@ -63,6 +63,8 @@ import {
 } from '@kepler.gl/types';
 import {KeplerTable} from '@kepler.gl/table';
 import {DataContainerInterface} from '@kepler.gl/utils';
+import {BrushGeoJsonExtension} from '@kepler.gl/deckgl-layers';
+
 
 const SUPPORTED_ANALYZER_TYPES = {
   [DATA_TYPES.GEOMETRY]: true,
@@ -347,8 +349,14 @@ export default class GeoJsonLayer extends Layer {
     return null;
   }
 
-  calculateDataAttribute({dataContainer, filteredIndex}, getPosition) {
-    return filteredIndex.map(i => this.dataToFeature[i]).filter(d => d);
+  calculateDataAttribute({ dataContainer, filteredIndex }, getPosition) {
+    return filteredIndex.map(i => {
+      const feat = this.dataToFeature[i];
+      if (feat && feat.properties) {
+        feat.properties.centroid = this.centroids[i];
+      }
+      return feat;
+    }).filter(d => d);
   }
 
   formatLayerData(datasets, oldLayerData) {
@@ -358,7 +366,10 @@ export default class GeoJsonLayer extends Layer {
     const {gpuFilter, dataContainer} = datasets[this.config.dataId];
     const {data} = this.updateData(datasets, oldLayerData);
 
-    const customFilterValueAccessor = (dc, d, fieldIndex) => {
+    const customFilterValueAccessor = (dc, d, fieldIndex, filter) => {
+      if (filter && filter.type === FILTER_TYPES.polygon) {
+        return d.properties.centroid[0];
+      }
       return dc.valueAt(d.properties.index, fieldIndex);
     };
     const indexAccessor = f => f.properties.index;
@@ -367,8 +378,7 @@ export default class GeoJsonLayer extends Layer {
     const accessors = this.getAttributeAccessors({dataAccessor, dataContainer});
 
     const queryResultAccessor = d => {
-      // return (this?.queryBounds && this?.queryBounds?.length === 0) || d.properties.selected ? 1 : 0;
-      return Math.round(Math.random())
+      return d.properties.centroid;
     };
 
     return {
@@ -377,7 +387,10 @@ export default class GeoJsonLayer extends Layer {
         indexAccessor,
         customFilterValueAccessor
       ),
-      getHighlighted: queryResultAccessor,
+      enableBrushing: this.queryBounds.length > 0,
+      brushRectangle: this.queryBounds.length > 0 ? this.queryBounds : [0, 0, 0, 0],
+      brushPolygon: [],
+      getCenter: queryResultAccessor,
       ...accessors
     };
   }
@@ -423,9 +436,13 @@ export default class GeoJsonLayer extends Layer {
   getCentroids(): number[][] {
     if (this.centroids.length === 0) {
       this.centroids = getGeojsonMeanCenters(this.dataToFeature);
-      console.time('build spatial index');
+      for (let i = 0; i < this.centroids.length; i++) {
+        const feat = this.dataToFeature[i];
+        if (feat && feat.properties) {
+          feat.properties.centroid = this.centroids[i];
+        }
+      }
       this.getSpatialIndex();
-      console.timeEnd('build spatial index');
     }
     return this.centroids;
   }
@@ -508,8 +525,7 @@ export default class GeoJsonLayer extends Layer {
 
     const updateTriggers = {
       ...this.getVisualChannelUpdateTriggers(),
-      getFilterValue: gpuFilter.filterValueUpdateTriggers,
-      getHighlighted: this.queryBounds
+      getFilterValue: gpuFilter.filterValueUpdateTriggers
     };
 
     const defaultLayerProps = this.getDefaultDeckLayerProps(opts);
@@ -537,6 +553,7 @@ export default class GeoJsonLayer extends Layer {
         capRounded: true,
         jointRounded: true,
         updateTriggers,
+        extensions: [...defaultLayerProps.extensions, new BrushGeoJsonExtension()],
         _subLayerProps: {
           ...(featureTypes?.polygon ? {'polygons-stroke': opaOverwrite} : {}),
           ...(featureTypes?.line ? {linestrings: opaOverwrite} : {}),
