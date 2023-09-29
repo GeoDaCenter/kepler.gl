@@ -163,7 +163,7 @@ const defaultGetIndex = d => d.index;
  * @param fieldIndex Column index in the data container.
  * @returns
  */
-const defaultGetData = (dc: DataContainerInterface, d: any, fieldIndex: number) => {
+const defaultGetData = (dc: DataContainerInterface, d: any, fieldIndex: number, filter?: Filter) => {
   return dc.valueAt(d.index, fieldIndex);
 };
 
@@ -183,9 +183,9 @@ const getFilterValueAccessor = (
     if (!filter) {
       return 0;
     }
-    // if (filter.type === FILTER_TYPES.polygon) {
-    //   return getData(dc, d, -1, filter);
-    // }
+    if (filter.type === FILTER_TYPES.polygon) {
+      return getData(dc, d, -1, filter);
+    }
     const fieldIndex = getDatasetFieldIndexForFilter(dataId, filter);
     const field = fields[fieldIndex];
 
@@ -218,10 +218,16 @@ export function getGpuFilterProps(filters: Filter[], dataId: string, fields: Fie
         f.gpuChannel[f.dataId.indexOf(dataId)] === i
     );
 
-    filterRange[i][0] = filter ? filter.value[0] - filter.domain?.[0] : 0;
-    filterRange[i][1] = filter ? filter.value[1] - filter.domain?.[0] : 0;
+    if (filter?.type === FILTER_TYPES.polygon) {
+      filterRange[i][0] = filter.value.properties.bbox[0];
+      filterRange[i][1] = filter.value.properties.bbox[2];
+      triggers[`gpuFilter_${i}`] = filter.id;
+    } else {
+      filterRange[i][0] = filter ? filter.value[0] - filter.domain?.[0] : 0;
+      filterRange[i][1] = filter ? filter.value[1] - filter.domain?.[0] : 0;
+      triggers[`gpuFilter_${i}`] = filter ? filter.name[filter.dataId.indexOf(dataId)] : null;
+    }
 
-    triggers[`gpuFilter_${i}`] = filter ? filter.name[filter.dataId.indexOf(dataId)] : null;
     channels.push(filter);
   }
 

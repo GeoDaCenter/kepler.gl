@@ -1144,7 +1144,7 @@ export function generatePolygonFilter<
     name,
     layerId,
     value: featureToFilterValue(feature, filter.id, {isVisible: true}),
-    gpu: false
+    gpu: true
   };
 }
 
