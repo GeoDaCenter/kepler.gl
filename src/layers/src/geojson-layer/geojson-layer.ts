@@ -171,6 +171,7 @@ export type GeoJsonLayerConfig = Merge<
 export type GeoJsonLayerMeta = {
   featureTypes?: DeckGlGeoTypes;
   fixedRadius?: boolean;
+  isArrow?: boolean;
 };
 
 export const geoJsonRequiredColumns: ['geojson'] = ['geojson'];
@@ -448,7 +449,7 @@ export default class GeoJsonLayer extends Layer {
       // set both fill and stroke to true
       return this.updateLayerVisConfig({
         filled: true,
-        stroked: true,
+        stroked: false,
         strokeColor: colorMaker.next().value
       });
     } else if (featureTypes && featureTypes.point) {
@@ -480,7 +481,7 @@ export default class GeoJsonLayer extends Layer {
   renderLayer(opts) {
     const {data: dataProps, gpuFilter, objectHovered, mapState, interactionConfig} = opts;
 
-    const {fixedRadius, featureTypes} = this.meta;
+    const {fixedRadius, featureTypes, isArrow} = this.meta;
     const radiusScale = this.getRadiusScaleByZoom(mapState, fixedRadius);
     const zoomFactor = this.getZoomFactor(mapState);
     const eleZoomFactor = this.getElevationZoomFactor(mapState);
