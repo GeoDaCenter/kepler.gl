@@ -744,7 +744,7 @@ export default function MapContainerFactory(
           mapboxApiAccessToken,
           mapboxApiUrl,
           layersForDeck,
-          editorInfo: primaryMap
+          editorInfo: false
             ? {
                 editor,
                 editorMenuActive,
