@@ -29,7 +29,7 @@ import {DataContainerInterface, getSampleData} from '@kepler.gl/utils';
 import {GeojsonLayerMetaProps} from '../layer-utils';
 
 export type GetFeature = (d: any) => Feature;
-export type GeojsonDataMaps = Array<Feature | null> | {points?: any, lines?: any, polygons?: any};
+export type GeojsonDataMaps = Array<Feature | null>;
 
 /* eslint-disable */
 // TODO: Re-enable eslint when we upgrade to handle enums and type maps
@@ -49,12 +49,8 @@ type RawArrowFeature = {
   data: any;
 };
 
-export function parseGeoJsonRawFeature(rawFeature: {} | Feature | RawArrowFeature): Feature | null {
+export function parseGeoJsonRawFeature(rawFeature: {} | Feature): Feature | null {
   if (rawFeature && typeof rawFeature === 'object') {
-    if ('encoding' in rawFeature && rawFeature.encoding) {
-      // Support GeoArrow data
-      return parseGeometryFromArrow(rawFeature);
-    }
     // Support GeoJson feature as object
     // probably need to normalize it as well
     const normalized = normalize(rawFeature);

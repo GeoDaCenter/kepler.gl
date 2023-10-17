@@ -63,7 +63,7 @@ import {KeplerTable} from '@kepler.gl/table';
 import {DataContainerInterface, ArrowDataContainer} from '@kepler.gl/utils';
 import {FilterArrowExtension} from '@kepler.gl/deckgl-layers';
 
-const SUPPORTED_ANALYZER_TYPES = {
+export const SUPPORTED_ANALYZER_TYPES = {
   [DATA_TYPES.GEOMETRY]: true,
   [DATA_TYPES.GEOMETRY_FROM_STRING]: true,
   [DATA_TYPES.PAIR_GEOMETRY_FROM_STRING]: true
@@ -171,7 +171,6 @@ export type GeoJsonLayerConfig = Merge<
 export type GeoJsonLayerMeta = {
   featureTypes?: DeckGlGeoTypes;
   fixedRadius?: boolean;
-  isArrow?: boolean;
 };
 
 export const geoJsonRequiredColumns: ['geojson'] = ['geojson'];
@@ -223,11 +222,11 @@ export default class GeoJsonLayer extends Layer {
   get type() {
     return GeoJsonLayer.type;
   }
-  static get type(): 'geojson' {
+  static get type() {
     return 'geojson';
   }
 
-  get name(): 'Polygon' {
+  get name() {
     return 'Polygon';
   }
 
@@ -303,7 +302,7 @@ export default class GeoJsonLayer extends Layer {
     };
   }
 
-  static findDefaultLayerProps({label, fields = []}: KeplerTable) {
+  static findDefaultLayerProps({label, metadata, fields = []}: KeplerTable) {
     const geojsonColumns = fields
       .filter(
         f =>
@@ -317,7 +316,7 @@ export default class GeoJsonLayer extends Layer {
     };
 
     const foundColumns = this.findDefaultColumnField(defaultColumns, fields);
-    if (!foundColumns || !foundColumns.length) {
+    if (!foundColumns || !foundColumns.length || metadata.format === 'arrow') {
       return {props: []};
     }
 
@@ -481,7 +480,7 @@ export default class GeoJsonLayer extends Layer {
   renderLayer(opts) {
     const {data: dataProps, gpuFilter, objectHovered, mapState, interactionConfig} = opts;
 
-    const {fixedRadius, featureTypes, isArrow} = this.meta;
+    const {fixedRadius, featureTypes} = this.meta;
     const radiusScale = this.getRadiusScaleByZoom(mapState, fixedRadius);
     const zoomFactor = this.getZoomFactor(mapState);
     const eleZoomFactor = this.getElevationZoomFactor(mapState);

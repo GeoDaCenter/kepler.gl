@@ -41,7 +41,7 @@ import {
 
 import {getGpuFilterProps, getDatasetFieldIndexForFilter} from './gpu-filter-utils';
 
-import {Layer} from '@kepler.gl/layers';
+import { Layer } from '@kepler.gl/layers';
 import {
   generateHashId,
   getSortingFunction,
