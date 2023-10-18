@@ -201,6 +201,8 @@ export const defaultElevation = 500;
 export const defaultLineWidth = 1;
 export const defaultRadius = 1;
 
+const defaultThresholdOfBigDataSet = 500000;
+
 export default class GeoJsonLayer extends Layer {
   declare config: GeoJsonLayerConfig;
   declare visConfigSettings: GeoJsonVisConfigSettings;
@@ -448,7 +450,7 @@ export default class GeoJsonLayer extends Layer {
       // set both fill and stroke to true
       return this.updateLayerVisConfig({
         filled: true,
-        stroked: false,
+        stroked: dataContainer.numRows() < defaultThresholdOfBigDataSet,
         strokeColor: colorMaker.next().value
       });
     } else if (featureTypes && featureTypes.point) {
