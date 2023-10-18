@@ -157,7 +157,7 @@ export type GeoJsonLayerVisConfig = {
   wireframe: boolean;
 };
 
-type GeoJsonLayerVisualChannelConfig = LayerColorConfig &
+export type GeoJsonLayerVisualChannelConfig = LayerColorConfig &
   LayerStrokeColorConfig &
   LayerSizeConfig &
   LayerHeightConfig &
@@ -302,7 +302,7 @@ export default class GeoJsonLayer extends Layer {
     };
   }
 
-  static findDefaultLayerProps({label, metadata, fields = []}: KeplerTable) {
+  static findDefaultLayerProps({label, fields = []}: KeplerTable) {
     const geojsonColumns = fields
       .filter(
         f =>
@@ -316,7 +316,7 @@ export default class GeoJsonLayer extends Layer {
     };
 
     const foundColumns = this.findDefaultColumnField(defaultColumns, fields);
-    if (!foundColumns || !foundColumns.length || metadata.format === 'arrow') {
+    if (!foundColumns || !foundColumns.length) {
       return {props: []};
     }
 
