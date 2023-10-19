@@ -30,6 +30,7 @@ import {
 } from '@kepler.gl/constants';
 import {ProcessorResult, Field} from '@kepler.gl/types';
 import {
+  GEOARROW_COLUMN_METADATA_KEY,
   arrowDataTypeToAnalyzerDataType,
   arrowDataTypeToFieldType,
   notNullorUndefined,
