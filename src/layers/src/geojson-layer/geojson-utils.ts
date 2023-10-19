@@ -49,8 +49,8 @@ type RawArrowFeature = {
   data: any;
 };
 
-export function parseGeoJsonRawFeature(rawFeature: {} | Feature): Feature | null {
-  if (rawFeature && typeof rawFeature === 'object') {
+export function parseGeoJsonRawFeature(rawFeature: unknown): Feature | null {
+  if (typeof rawFeature === 'object') {
     // Support GeoJson feature as object
     // probably need to normalize it as well
     const normalized = normalize(rawFeature);

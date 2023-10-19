@@ -255,7 +255,7 @@ export function parseCsvRowsByFieldType(
  *  }
  * }));
  */
-export function processRowObject(rawData: object[]): ProcessorResult {
+export function processRowObject(rawData: unknown[]): ProcessorResult {
   if (!Array.isArray(rawData)) {
     return null;
   } else if (!rawData.length) {
