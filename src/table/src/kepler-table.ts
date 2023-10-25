@@ -348,6 +348,16 @@ class KeplerTable {
     this.filteredIndexForDomain =
       filterResult.filteredIndexForDomain || this.filteredIndexForDomain;
 
+    try {
+      const msg = {
+        dataId,
+        type: 'highlight',
+        data: shouldCalDomain ? this.filteredIndexForDomain : this.filteredIndex
+      };
+      // @ts-ignore-next-line
+      window.wx_msg.postMessage(msg);
+    } catch (e) { console.log(e); }
+
     return this;
   }
 
