@@ -55,6 +55,7 @@ function* columnIterator(dataContainer: DataContainerInterface, columnIndex: num
  */
 export class ArrowDataContainer implements DataContainerInterface {
   _cols: ArrowColumn[];
+  _colData: any[][];
   _numColumns: number;
   _numRows: number;
 
@@ -68,6 +69,8 @@ export class ArrowDataContainer implements DataContainerInterface {
     }
 
     this._cols = data.cols;
+    // cache column data to make valueAt() faster
+    this._colData = data.cols.map(c => c.toArray());
     this._numColumns = data.cols.length;
     this._numRows = data.cols[0].length;
   }
@@ -81,7 +84,7 @@ export class ArrowDataContainer implements DataContainerInterface {
   }
 
   valueAt(rowIndex: number, columnIndex: number): any {
-    return this._cols[columnIndex].get(rowIndex);
+    return this._colData[columnIndex][rowIndex];
   }
 
   row(rowIndex: number, sharedRow?: SharedRowOptions): DataRow {
@@ -95,7 +98,7 @@ export class ArrowDataContainer implements DataContainerInterface {
   }
 
   rowAsArray(rowIndex: number): any[] {
-    return this._cols.map(col => col.get(rowIndex));
+    return this._colData.map(col => col[rowIndex]);
   }
 
   rows(sharedRow: SharedRowOptions) {

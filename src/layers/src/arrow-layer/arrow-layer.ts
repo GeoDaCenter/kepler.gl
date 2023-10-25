@@ -179,9 +179,14 @@ export default class ArrowLayer extends GeoJsonLayer {
         encoding: col.metadata?.get(GEOARROW_COLUMN_METADATA_KEY),
         data: rawGeometry
       });
+      const properties = this.dataContainer.rowAsArray(objectInfo.index).reduce((prev, cur, i) => {
+        if (i !== geojson.fieldIdx) prev[this.dataContainer.getColumn(i).name] = cur;
+        return prev;
+      }, {});
       return {
         ...hoveredFeature,
         properties: {
+          ...properties,
           index: objectInfo.index
         }
       };
