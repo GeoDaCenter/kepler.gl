@@ -8,6 +8,7 @@ import {ALL_FIELD_TYPES} from '@kepler.gl/constants';
 
 import {DataRow, SharedRowOptions} from './data-row';
 import {DataContainerInterface, RangeOptions} from './data-container-interface';
+import {Field} from '@kepler.gl/types';
 
 type ArrowDataContainerInput = {
   cols: arrow.Vector[];
