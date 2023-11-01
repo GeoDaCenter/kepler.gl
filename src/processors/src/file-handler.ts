@@ -165,7 +165,7 @@ export async function* readBatch(
     // Only json parse will have `FINAL_RESULT`
     if (batch.batchType === BATCH_TYPE.FINAL_RESULT) {
       if (batch.container) {
-        result = { ...batch.container };
+        result = {...batch.container};
       }
       // Set the streamed data correctly is Batch json path is set
       // and the path streamed is not the top level object (jsonpath = '$')
@@ -186,7 +186,7 @@ export async function* readBatch(
 
     yield {
       ...batch,
-      ...(batch.schema ? { headers: Object.keys(batch.schema) } : {}),
+      ...(batch.schema ? {headers: Object.keys(batch.schema)} : {}),
       fileName,
       // if dataset is CSV, data is set to the raw batches
       data: result ? result : batches
