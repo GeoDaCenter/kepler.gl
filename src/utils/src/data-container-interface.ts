@@ -62,6 +62,12 @@ export interface DataContainerInterface {
   column(columnIndex: number): Generator<any, void, any>;
 
   /**
+   * Updates the data container with new data.
+   * @param updateData updated data, e.g. for arrow data container, it's an array of arrow columns; for row data container, it's an array of rows.
+   */
+  update?(updateData: any[]): void;
+
+  /**
    * Returns the column object at the specified index.
    * @param columnIndex Column index.
    * @returns The column object at the specified index.
@@ -74,7 +80,6 @@ export interface DataContainerInterface {
    * @returns The field object at the specified index.
    */
   getField?(columnIndex: number): Field;
-
 
   /**
    * Returns the field object at the specified index.

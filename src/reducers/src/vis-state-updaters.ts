@@ -29,7 +29,12 @@ import isEqual from 'lodash.isequal';
 import copy from 'copy-to-clipboard';
 import deepmerge from 'deepmerge';
 // Tasks
-import {LOAD_FILE_TASK, UNWRAP_TASK, PROCESS_FILE_DATA, DELAY_TASK} from '@kepler.gl/tasks';
+import {
+  LOAD_FILE_TASK,
+  UNWRAP_TASK,
+  PROCESS_FILE_DATA,
+  DELAY_TASK
+} from '@kepler.gl/tasks';
 // Actions
 import {
   applyLayerConfig,
@@ -40,6 +45,7 @@ import {
   loadFilesErr,
   loadFilesSuccess,
   loadFileStepSuccess,
+  loadBatchDataSuccess,
   loadNextFile,
   nextFileBatch,
   ReceiveMapConfigPayload,
@@ -2181,7 +2187,23 @@ export function loadFileStepSuccessUpdater(
 
   return withTask(
     stateWithCache,
-    DELAY_TASK(200).map(filesToLoad.length ? loadNextFile : () => onFinish(fileCache))
+    DELAY_TASK(0).map(filesToLoad.length ? loadNextFile : () => onFinish(fileCache))
+  );
+}
+
+export function loadBatchDataSuccessUpdater(
+  state: VisState,
+  action: VisStateActions.LoadFileStepSuccessAction
+): VisState {
+  if (!state.fileLoading) {
+    return state;
+  }
+  const {fileCache} = action;
+  const {onFinish} = state.fileLoading;
+
+  return withTask(
+    state,
+    DELAY_TASK(0).map(() => onFinish(fileCache))
   );
 }
 
@@ -2249,7 +2271,6 @@ export function processFileContentUpdater(
   action: VisStateActions.ProcessFileContentUpdaterAction
 ): VisState {
   const {content, fileCache} = action.payload;
-
   const stateWithProgress = updateFileLoadingProgressUpdater(state, {
     fileName: content.fileName,
     progress: {percent: 1, message: 'processing...'}
@@ -2287,12 +2308,36 @@ export const nextFileBatchUpdater = (
     payload: {gen, fileName, progress, accumulated, onFinish}
   }: VisStateActions.NextFileBatchUpdaterAction
 ): VisState => {
-  const stateWithProgress = updateFileLoadingProgressUpdater(state, {
+  let stateWithProgress = updateFileLoadingProgressUpdater(state, {
     fileName,
     progress: parseProgress(state.fileLoadingProgress[fileName], progress)
   });
-  return withTask(
+  console.log(
+    'nextFileBatchUpdater',
     stateWithProgress,
+    gen,
+    fileName,
+    progress,
+    accumulated,
+    onFinish
+  );
+  if (accumulated && accumulated.data?.length > 0) {
+    console.log(accumulated);
+    const payload = {
+      content: accumulated,
+      fileCache: []
+    };
+    stateWithProgress = processFileContentUpdater(stateWithProgress, {payload});
+  }
+  return withTask(stateWithProgress, [
+    ...(accumulated && accumulated.data?.length > 0
+      ? [
+          PROCESS_FILE_DATA({content: accumulated, fileCache: []}).bimap(
+            result => loadBatchDataSuccess({fileName, fileCache: result}),
+            err => loadFilesErr(fileName, err)
+          )
+        ]
+      : []),
     UNWRAP_TASK(gen.next()).bimap(
       ({value, done}) => {
         return done
@@ -2307,7 +2352,7 @@ export const nextFileBatchUpdater = (
       },
       err => loadFilesErr(fileName, err)
     )
-  );
+  ]);
 };
 
 /**
@@ -2334,7 +2379,7 @@ export const loadFilesErrUpdater = (
   // kick off next file or finish
   return withTask(
     nextState,
-    DELAY_TASK(200).map(filesToLoad.length ? loadNextFile : () => onFinish(fileCache))
+    DELAY_TASK(0).map(filesToLoad.length ? loadNextFile : () => onFinish(fileCache))
   );
 };
 
