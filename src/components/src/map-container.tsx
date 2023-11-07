@@ -819,7 +819,6 @@ export default function MapContainerFactory(
           return null;
         }
       }
-      console.log(allDeckGlProps);
       return (
         <div
           {...(isInteractive

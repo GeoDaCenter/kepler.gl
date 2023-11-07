@@ -24,38 +24,8 @@ import {GeoJsonLayer as DeckGLGeoJsonLayer} from '@deck.gl/layers';
 import {HIGHLIGH_COLOR_3D} from '@kepler.gl/constants';
 import {KeplerTable} from '@kepler.gl/table';
 import {DataContainerInterface} from '@kepler.gl/utils';
-import {FilterArrowExtension} from '@kepler.gl/deckgl-layers';
+// import {FilterArrowExtension} from '@kepler.gl/deckgl-layers';
 import GeoJsonLayer, {SUPPORTED_ANALYZER_TYPES} from '../geojson-layer/geojson-layer';
-
-function updateBoundsFromGeoArrowSamples(
-  flatCoords: Float64Array,
-  nDim: number,
-  bounds: [number, number, number, number],
-  sampleSize: number = 100
-) {
-  const numberOfFeatures = flatCoords.length / nDim;
-  const sampleStep = Math.max(Math.floor(numberOfFeatures / sampleSize), 1);
-
-  const newBounds: [number, number, number, number] = [...bounds];
-  for (let i = 0; i < numberOfFeatures; i += sampleStep) {
-    const lng = flatCoords[i * nDim];
-    const lat = flatCoords[i * nDim + 1];
-    if (lng < bounds[0]) {
-      newBounds[0] = lng;
-    }
-    if (lat < newBounds[1]) {
-      newBounds[1] = lat;
-    }
-    if (lng > newBounds[2]) {
-      newBounds[2] = lng;
-    }
-    if (lat > newBounds[3]) {
-      newBounds[3] = lat;
-    }
-  }
-
-  return newBounds;
-}
 
 export default class ArrowLayer extends GeoJsonLayer {
   binaryFeatures: BinaryFeatures[]; // TODO: reuse dataToFeature?
@@ -179,7 +149,7 @@ export default class ArrowLayer extends GeoJsonLayer {
 
     const encoding = arrowField?.metadata?.get('ARROW:extension:name');
     // create binary data from arrow data for GeoJsonLayer
-    const {binaryGeometries, featureTypes} = getBinaryGeometriesFromArrow(
+    const {binaryGeometries, bounds, featureTypes} = getBinaryGeometriesFromArrow(
       geoColumn,
       encoding
     );
@@ -189,21 +159,7 @@ export default class ArrowLayer extends GeoJsonLayer {
       this.binaryFeatures.push(binaryGeometries[i]);
     }
 
-    // TODO: this should be removed once fix was applied in loaders.gl
-    let bounds : [number, number, number, number] = [Infinity, Infinity, -Infinity, -Infinity]
-    binaryGeometries.forEach(b => {
-      const coords = featureTypes.polygon
-        ? b.polygons?.positions
-        : featureTypes.point
-        ? b.points?.positions
-        : b.lines?.positions;
-      bounds = updateBoundsFromGeoArrowSamples(
-        coords?.value as Float64Array,
-        coords?.size || 2,
-        bounds
-      );
-    });
-
+    console.log(bounds);
     // since there is no feature.properties.radius, we set fixedRadius to false
     const fixedRadius = false;
     this.updateMeta({bounds, fixedRadius, featureTypes});
