@@ -8,7 +8,6 @@ import {ALL_FIELD_TYPES} from '@kepler.gl/constants';
 
 import {DataRow, SharedRowOptions} from './data-row';
 import {DataContainerInterface, RangeOptions} from './data-container-interface';
-import {Field} from '@kepler.gl/types';
 
 type ArrowDataContainerInput = {
   cols: arrow.Vector[];
@@ -63,6 +62,14 @@ export class ArrowDataContainer implements DataContainerInterface {
     this._fields = data.fields || [];
 
     // this._colData = data.cols.map(c => c.toArray());
+  }
+
+  update(updateData: arrow.Vector<any>[]) {
+    this._cols = updateData;
+    this._numColumns = this._cols.length;
+    this._numRows = this._cols[0].length;
+    // cache column data to make valueAt() faster
+    // this._colData = this._cols.map(c => c.toArray());
   }
 
   numRows(): number {

@@ -419,7 +419,7 @@ export default class GeoJsonLayer extends Layer {
     const getGeoColumn = geoColumnAccessor(this.config.columns);
     const getGeoField = geoFieldAccessor(this.config.columns);
 
-    if (this.dataToFeature.length === 0) {
+    // if (this.dataToFeature.length === 0) {
       const updateLayerMetaFunc =
         dataContainer instanceof ArrowDataContainer
           ? getGeojsonLayerMetaFromArrow
@@ -431,9 +431,13 @@ export default class GeoJsonLayer extends Layer {
         getGeoField
       });
 
-      this.dataToFeature = dataToFeature;
+      // append new data from binaryGeometries to this.binaryFeatures
+      for (let i = this.dataToFeature.length; i < dataToFeature.length; ++i) {
+        this.dataToFeature.push(dataToFeature[i]);
+      }
+      // this.dataToFeature = dataToFeature;
       this.updateMeta({bounds, fixedRadius, featureTypes});
-    }
+    // }
   }
 
   setInitialLayerConfig({dataContainer}) {
@@ -497,7 +501,7 @@ export default class GeoJsonLayer extends Layer {
     const updateTriggers = {
       ...this.getVisualChannelUpdateTriggers(),
       getFilterValue: gpuFilter.filterValueUpdateTriggers,
-      getFiltered: this.filteredIndexTrigger
+      // getFiltered: this.filteredIndexTrigger
     };
 
     const defaultLayerProps = this.getDefaultDeckLayerProps(opts);
@@ -531,7 +535,7 @@ export default class GeoJsonLayer extends Layer {
         capRounded: true,
         jointRounded: true,
         updateTriggers,
-        extensions: [...defaultLayerProps.extensions, new FilterArrowExtension()],
+        // extensions: [...defaultLayerProps.extensions, new FilterArrowExtension()],
         _subLayerProps: {
           ...(featureTypes?.polygon ? {'polygons-stroke': opaOverwrite} : {}),
           ...(featureTypes?.line ? {linestrings: opaOverwrite} : {}),
