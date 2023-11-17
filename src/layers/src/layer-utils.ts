@@ -23,7 +23,11 @@ import {Feature, BBox} from 'geojson';
 import {Field, FieldPair} from '@kepler.gl/types';
 import {DataContainerInterface} from '@kepler.gl/utils';
 import {BinaryFeatures} from '@loaders.gl/schema';
-import {getBinaryGeometriesFromArrow, parseGeometryFromArrow} from '@loaders.gl/arrow';
+import {
+  getBinaryGeometriesFromArrow,
+  parseGeometryFromArrow,
+  BinaryGeometriesFromArrowOptions
+} from '@loaders.gl/arrow';
 
 import {DeckGlGeoTypes} from './geojson-layer/geojson-utils';
 
@@ -47,6 +51,7 @@ export type GeojsonLayerMetaProps = {
   featureTypes: DeckGlGeoTypes;
   bounds: BBox | null;
   fixedRadius: boolean;
+  centroids?: number[][];
 };
 
 export function getGeojsonLayerMetaFromArrow({
@@ -62,10 +67,15 @@ export function getGeojsonLayerMetaFromArrow({
   const arrowField = getGeoField(dataContainer);
 
   const encoding = arrowField?.metadata?.get('ARROW:extension:name');
+  const options: BinaryGeometriesFromArrowOptions = {
+    triangulate: true,
+    meanCenter: true
+  };
   // create binary data from arrow data for GeoJsonLayer
-  const {binaryGeometries, featureTypes, bounds} = getBinaryGeometriesFromArrow(
+  const {binaryGeometries, featureTypes, bounds, meanCenters} = getBinaryGeometriesFromArrow(
     geoColumn,
-    encoding
+    encoding,
+    options
   );
 
   // since there is no feature.properties.radius, we set fixedRadius to false
@@ -75,7 +85,8 @@ export function getGeojsonLayerMetaFromArrow({
     dataToFeature: binaryGeometries,
     featureTypes,
     bounds,
-    fixedRadius
+    fixedRadius,
+    centroids: meanCenters
   };
 }
 
@@ -118,13 +129,15 @@ export function getHoveredObjectFromArrow(
       return prev;
     }, {});
 
-    return hoveredFeature ? {
-      ...hoveredFeature,
-      properties: {
-        ...properties,
-        index: objectInfo.index
-      }
-    } : null;
+    return hoveredFeature
+      ? {
+          ...hoveredFeature,
+          properties: {
+            ...properties,
+            index: objectInfo.index
+          }
+        }
+      : null;
   }
   return null;
 }

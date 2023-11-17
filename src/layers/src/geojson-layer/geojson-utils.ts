@@ -21,6 +21,7 @@
 import {Feature, BBox} from 'geojson';
 import normalize from '@mapbox/geojson-normalize';
 import bbox from '@turf/bbox';
+import center from '@turf/center';
 import {parseSync} from '@loaders.gl/core';
 import {WKBLoader, WKTLoader} from '@loaders.gl/wkt';
 import {binaryToGeometry} from '@loaders.gl/gis';
@@ -89,11 +90,29 @@ export function getGeojsonLayerMeta({
   // keep a record of what type of geometry the collection has
   const featureTypes = getGeojsonFeatureTypes(dataToFeature);
 
+  const meanCenters: number[][] = [];
+  for (let i = 0; i < dataToFeature.length; i++) {
+    const feature = dataToFeature[i];
+    if (feature) {
+      // TODO: use line interpolate to get center of line for LineString
+      // meanCenters.push(centerOfMass(feature).geometry.coordinates);
+      // const geometries =
+      //   feature.geometry.type === 'GeometryCollection'
+      //     ? feature.geometry.geometries
+      //     : [feature.geometry];
+      // @ts-expect-error
+      const cent = center(feature);
+      // const cent = centerOfMass(feature).geometry.coordinates;
+      meanCenters.push(cent.geometry.coordinates);
+    }
+  }
+
   return {
     dataToFeature,
     bounds,
     fixedRadius,
-    featureTypes
+    featureTypes,
+    centroids: meanCenters
   };
 }
 
