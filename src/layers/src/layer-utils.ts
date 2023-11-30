@@ -26,7 +26,8 @@ import {BinaryFeatures} from '@loaders.gl/schema';
 import {
   getBinaryGeometriesFromArrow,
   parseGeometryFromArrow,
-  BinaryGeometriesFromArrowOptions
+  BinaryGeometriesFromArrowOptions,
+  parseGeoArrowOnWorker
 } from '@loaders.gl/arrow';
 
 import {DeckGlGeoTypes} from './geojson-layer/geojson-utils';
@@ -57,17 +58,20 @@ export type GeojsonLayerMetaProps = {
 export function getGeojsonLayerMetaFromArrow({
   dataContainer,
   getGeoColumn,
-  getGeoField
+  getGeoField,
+  chunkIndex
 }: {
   dataContainer: DataContainerInterface;
   getGeoColumn: (dataContainer: DataContainerInterface) => unknown;
-  getGeoField: (dataContainer: DataContainerInterface) => Field | null;
+    getGeoField: (dataContainer: DataContainerInterface) => Field | null;
+  chunkIndex?: number;
 }): GeojsonLayerMetaProps {
   const geoColumn = getGeoColumn(dataContainer) as arrow.Vector;
   const arrowField = getGeoField(dataContainer);
 
   const encoding = arrowField?.metadata?.get('ARROW:extension:name');
   const options: BinaryGeometriesFromArrowOptions = {
+    ...(chunkIndex !== undefined && chunkIndex >= 0 ? {chunkIndex} : {}),
     triangulate: true,
     meanCenter: true
   };
@@ -77,6 +81,70 @@ export function getGeojsonLayerMetaFromArrow({
     encoding,
     options
   );
+
+  // since there is no feature.properties.radius, we set fixedRadius to false
+  const fixedRadius = false;
+
+  return {
+    dataToFeature: binaryGeometries,
+    featureTypes,
+    bounds,
+    fixedRadius,
+    centroids: meanCenters
+  };
+}
+
+
+export async function getGeojsonLayerMetaFromArrowAsync({
+  dataContainer,
+  getGeoColumn,
+  getGeoField,
+  chunkIndex
+}: {
+  dataContainer: DataContainerInterface;
+  getGeoColumn: (dataContainer: DataContainerInterface) => unknown;
+  getGeoField: (dataContainer: DataContainerInterface) => Field | null;
+  chunkIndex: number;
+  }): Promise<GeojsonLayerMetaProps> {
+  const arrowField = getGeoField(dataContainer);
+  const geoColumn = getGeoColumn(dataContainer) as arrow.Vector;
+  const geometryChunk = geoColumn?.data[chunkIndex];
+
+  const chunkData = {
+    type: {
+      ...geometryChunk?.type,
+      typeId: geometryChunk?.typeId,
+      listSize: geometryChunk?.type?.listSize
+    },
+    offset: geometryChunk.offset,
+    length: geometryChunk.length,
+    nullCount: geometryChunk.nullCount,
+    buffers: geometryChunk.buffers,
+    children: geometryChunk.children,
+    dictionary: geometryChunk.dictionary
+  };
+  const encoding = arrowField?.metadata?.get('ARROW:extension:name');
+
+  console.log('start parseGeoArrowOnWorker');
+
+  const parsedGeoArrowData = await parseGeoArrowOnWorker(
+    {
+      operation: 'parse-geoarrow',
+      chunkData,
+      chunkIndex: 0,
+      geometryEncoding: encoding,
+      meanCenter: true,
+      triangle: false
+    },
+    {
+      _workerType: 'test'
+    }
+  );
+
+  console.log('end parseGeoArrowOnWorker');
+  // kepler should await for the result from web worker and render the binary geometries
+  const {binaryGeometries, bounds, featureTypes, meanCenters} =
+    parsedGeoArrowData.binaryDataFromGeoArrow!;
 
   // since there is no feature.properties.radius, we set fixedRadius to false
   const fixedRadius = false;

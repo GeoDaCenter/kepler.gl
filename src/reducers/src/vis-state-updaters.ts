@@ -38,6 +38,7 @@ import {
   layerTypeChange,
   layerVisConfigChange,
   layerVisualChannelConfigChange,
+  loadBatchDataSuccess,
   loadFilesErr,
   loadFilesSuccess,
   loadFileStepSuccess,
@@ -2277,6 +2278,21 @@ export function parseProgress(prevProgress = {}, progress) {
   };
 }
 
+export function loadBatchDataSuccessUpdater(
+  state: VisState,
+  action: VisStateActions.LoadFileStepSuccessAction
+): VisState {
+  if (!state.fileLoading) {
+    return state;
+  }
+  const {fileCache} = action;
+  const {onFinish} = state.fileLoading;
+  return withTask(
+    state,
+    DELAY_TASK(200).map(() => onFinish(fileCache))
+  );
+}
+
 /**
  * gets called with payload = AsyncGenerator<???>
  * @memberof visStateUpdaters
@@ -2292,23 +2308,32 @@ export const nextFileBatchUpdater = (
     fileName,
     progress: parseProgress(state.fileLoadingProgress[fileName], progress)
   });
+
   return withTask(
-    stateWithProgress,
-    UNWRAP_TASK(gen.next()).bimap(
-      ({value, done}) => {
-        return done
-          ? onFinish(accumulated)
-          : nextFileBatch({
-              gen,
-              fileName,
-              progress: value.progress,
-              accumulated: value,
-              onFinish
-            });
-      },
-      err => loadFilesErr(fileName, err)
-    )
-  );
+    stateWithProgress, [
+      ...(fileName.endsWith('arrow') && accumulated && accumulated.data?.length > 0
+        ? [
+            PROCESS_FILE_DATA({content: accumulated, fileCache: []}).bimap(
+              result => loadBatchDataSuccess({fileName, fileCache: result}),
+              err => loadFilesErr(fileName, err)
+            )
+          ]
+        : []),
+      UNWRAP_TASK(gen.next()).bimap(
+        ({value, done}) => {
+          return done
+            ? onFinish(accumulated)
+            : nextFileBatch({
+                gen,
+                fileName,
+                progress: value.progress,
+                accumulated: value,
+                onFinish
+              });
+        },
+        err => loadFilesErr(fileName, err)
+      )
+    ]);
 };
 
 /**
