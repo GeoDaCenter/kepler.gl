@@ -64,6 +64,14 @@ export class ArrowDataContainer implements DataContainerInterface {
     // this._colData = data.cols.map(c => c.toArray());
   }
 
+  update(updateData: arrow.Vector<any>[]) {
+    this._cols = updateData;
+    this._numColumns = this._cols.length;
+    this._numRows = this._cols[0].length;
+    // cache column data to make valueAt() faster
+    // this._colData = this._cols.map(c => c.toArray());
+  }
+
   numRows(): number {
     return this._numRows;
   }

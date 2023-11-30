@@ -43,7 +43,6 @@ export enum FeatureTypes {
 }
 
 /* eslint-enable */
-
 export function parseGeoJsonRawFeature(rawFeature: unknown): Feature | null {
   if (typeof rawFeature === 'object') {
     // Support GeoJson feature as object

@@ -63,7 +63,7 @@ import {KeplerTable} from '@kepler.gl/table';
 import {DataContainerInterface, ArrowDataContainer} from '@kepler.gl/utils';
 import {FilterArrowExtension} from '@kepler.gl/deckgl-layers';
 
-const SUPPORTED_ANALYZER_TYPES = {
+export const SUPPORTED_ANALYZER_TYPES = {
   [DATA_TYPES.GEOMETRY]: true,
   [DATA_TYPES.GEOMETRY_FROM_STRING]: true,
   [DATA_TYPES.PAIR_GEOMETRY_FROM_STRING]: true
@@ -157,7 +157,7 @@ export type GeoJsonLayerVisConfig = {
   wireframe: boolean;
 };
 
-type GeoJsonLayerVisualChannelConfig = LayerColorConfig &
+export type GeoJsonLayerVisualChannelConfig = LayerColorConfig &
   LayerStrokeColorConfig &
   LayerSizeConfig &
   LayerHeightConfig &
@@ -222,11 +222,11 @@ export default class GeoJsonLayer extends Layer {
   get type() {
     return GeoJsonLayer.type;
   }
-  static get type(): 'geojson' {
+  static get type() {
     return 'geojson';
   }
 
-  get name(): 'Polygon' {
+  get name() {
     return 'Polygon';
   }
 
@@ -419,7 +419,7 @@ export default class GeoJsonLayer extends Layer {
     const getGeoColumn = geoColumnAccessor(this.config.columns);
     const getGeoField = geoFieldAccessor(this.config.columns);
 
-    if (this.dataToFeature.length === 0) {
+    // if (this.dataToFeature.length === 0) {
       const updateLayerMetaFunc =
         dataContainer instanceof ArrowDataContainer
           ? getGeojsonLayerMetaFromArrow
@@ -431,9 +431,13 @@ export default class GeoJsonLayer extends Layer {
         getGeoField
       });
 
-      this.dataToFeature = dataToFeature;
+      // append new data from binaryGeometries to this.binaryFeatures
+      for (let i = this.dataToFeature.length; i < dataToFeature.length; ++i) {
+        this.dataToFeature.push(dataToFeature[i]);
+      }
+      // this.dataToFeature = dataToFeature;
       this.updateMeta({bounds, fixedRadius, featureTypes});
-    }
+    // }
   }
 
   setInitialLayerConfig({dataContainer}) {
@@ -497,7 +501,7 @@ export default class GeoJsonLayer extends Layer {
     const updateTriggers = {
       ...this.getVisualChannelUpdateTriggers(),
       getFilterValue: gpuFilter.filterValueUpdateTriggers,
-      getFiltered: this.filteredIndexTrigger
+      // getFiltered: this.filteredIndexTrigger
     };
 
     const defaultLayerProps = this.getDefaultDeckLayerProps(opts);
@@ -531,7 +535,7 @@ export default class GeoJsonLayer extends Layer {
         capRounded: true,
         jointRounded: true,
         updateTriggers,
-        extensions: [...defaultLayerProps.extensions, new FilterArrowExtension()],
+        // extensions: [...defaultLayerProps.extensions, new FilterArrowExtension()],
         _subLayerProps: {
           ...(featureTypes?.polygon ? {'polygons-stroke': opaOverwrite} : {}),
           ...(featureTypes?.line ? {linestrings: opaOverwrite} : {}),

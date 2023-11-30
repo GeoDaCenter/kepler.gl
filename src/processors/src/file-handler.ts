@@ -29,7 +29,7 @@ import {
   processKeplerglJSON,
   processRowObject
 } from './data-processor';
-import {generateHashId, isPlainObject} from '@kepler.gl/utils';
+import {generateHashId, generateHashIdFromString, isPlainObject} from '@kepler.gl/utils';
 import {DATASET_FORMATS} from '@kepler.gl/constants';
 import {Loader} from '@loaders.gl/loader-utils';
 import {FileCacheItem, ValidKeplerGlMap} from './types';
@@ -61,6 +61,18 @@ const JSON_LOADER_OPTIONS = {
   ]
 };
 
+/**
+ * ProcessFileDataContent
+ * @typedef {Object} ProcessFileDataContent
+ * @property {Object} data - parsed data
+ * @property {string} fileName - file name
+ * @property {number} [length] - number of rows
+ * @property {Object} [progress] - progress of file processing
+ * @property {number} [progress.rowCount] - number of rows processed
+ * @property {number} [progress.rowCountInBatch] - number of rows in current batch
+ * @property {number} [progress.percent] - percent of file processed
+ * @property {Map<string, string>} [metadata] - metadata e.g. for arrow data, metadata could be the schema.fields
+ */
 export type ProcessFileDataContent = {
   data: unknown;
   fileName: string;
@@ -215,9 +227,12 @@ export function processFileData({
   fileCache: FileCacheItem[];
 }): Promise<FileCacheItem[]> {
   return new Promise((resolve, reject) => {
-    let {data} = content;
+    let {fileName, data} = content;
     let format: string | undefined;
     let processor: Function | undefined;
+
+    // generate unique id with length of 4 using fileName string
+    const id = generateHashIdFromString(fileName);
 
     if (isArrowData(data)) {
       format = DATASET_FORMATS.arrow;
@@ -241,6 +256,7 @@ export function processFileData({
         {
           data: result,
           info: {
+            id,
             label: content.fileName,
             format
           }

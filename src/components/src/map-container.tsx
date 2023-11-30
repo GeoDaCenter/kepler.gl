@@ -824,7 +824,6 @@ export default function MapContainerFactory(
           return null;
         }
       }
-
       return (
         <div
           {...(isInteractive
