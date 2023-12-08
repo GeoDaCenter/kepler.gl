@@ -2289,7 +2289,7 @@ export function loadBatchDataSuccessUpdater(
   const {onFinish} = state.fileLoading;
   return withTask(
     state,
-    DELAY_TASK(200).map(() => onFinish(fileCache))
+    DELAY_TASK(10).map(() => onFinish(fileCache))
   );
 }
 
@@ -2311,7 +2311,7 @@ export const nextFileBatchUpdater = (
 
   return withTask(
     stateWithProgress, [
-      ...(fileName.endsWith('arrow') && accumulated && accumulated.data?.length > 0
+      ...(fileName.endsWith('arrow') && accumulated?.data?.length > 1
         ? [
             PROCESS_FILE_DATA({content: accumulated, fileCache: []}).bimap(
               result => loadBatchDataSuccess({fileName, fileCache: result}),

@@ -197,7 +197,7 @@ export const addDataToMapUpdater = (
       )
     ),
     if_(
-      isProgressiveLoading === false,
+      !isProgressiveLoading,
       with_(({ visState }) =>
         pick_('mapState')(
           apply_(
@@ -211,10 +211,7 @@ export const addDataToMapUpdater = (
         )
       )
     ),
-    if_(
-      isProgressiveLoading === false,
-      pick_('mapStyle')(apply_(styleMapConfigUpdater, payload_({ config: parsedConfig, options }))),
-    ),
+    pick_('mapStyle')(apply_(styleMapConfigUpdater, payload_({ config: parsedConfig, options }))),
     pick_('uiState')(apply_(uiStateLoadFilesSuccessUpdater, payload_(null))),
     pick_('uiState')(apply_(toggleModalUpdater, payload_(null))),
     pick_('uiState')(merge_(options.hasOwnProperty('readOnly') ? {readOnly: options.readOnly} : {}))

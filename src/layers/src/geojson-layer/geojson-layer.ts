@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 import * as arrow from 'apache-arrow';
-import {BinaryFeatures} from '@loaders.gl/schema';
+import {BinaryFeatureCollection} from '@loaders.gl/schema';
 import {Feature, Polygon} from 'geojson';
 import booleanWithin from '@turf/boolean-within';
 import {point as turfPoint} from '@turf/helpers';
@@ -208,7 +208,7 @@ export default class GeoJsonLayer extends Layer {
   declare visConfigSettings: GeoJsonVisConfigSettings;
   declare meta: GeoJsonLayerMeta;
 
-  dataToFeature: GeojsonDataMaps | BinaryFeatures[] = [];
+  dataToFeature: GeojsonDataMaps | BinaryFeatureCollection[] = [];
   dataContainer: DataContainerInterface | null = null;
   filteredIndex: Uint8ClampedArray | null = null;
   filteredIndexTrigger: number[] = [];
@@ -367,15 +367,21 @@ export default class GeoJsonLayer extends Layer {
     // filter geojson/arrow table by values and make a partial copy of the raw table are expensive
     // so we will use filteredIndex to create an attribute e.g. filteredIndex [0|1] for GPU filtering
     // in deck.gl layer, see: FilterArrowExtension in @kepler.gl/deckgl-layers
-    if (!this.filteredIndex) {
+    if (!this.filteredIndex || this.filteredIndex.length !== dataContainer.numRows()) {
+      // for incremental data loading, we need to update filteredIndex
       this.filteredIndex = new Uint8ClampedArray(dataContainer.numRows());
-    }
-    this.filteredIndex.fill(0);
-    for (let i = 0; i < filteredIndex.length; ++i) {
-      this.filteredIndex[filteredIndex[i]] = 1;
+      this.filteredIndex.fill(1);
     }
 
-    // this.filteredIndexTrigger = filteredIndex;
+    // check if filteredIndex is a range from 0 to numRows if it is, we can use it directly in GPU filter
+    const isRange = filteredIndex && filteredIndex.length === dataContainer.numRows();
+    if (!isRange) {
+      this.filteredIndex.fill(0);
+      for (let i = 0; i < filteredIndex.length; ++i) {
+        this.filteredIndex[filteredIndex[i]] = 1;
+      }
+      this.filteredIndexTrigger = filteredIndex;
+    }
 
     // for arrow, always return full dataToFeature instead of a filtered one, so there is no need to update attributes in GPU
     // for geojson, this should work as well and more efficient. But we need to update some test cases e.g. #GeojsonLayer -> formatLayerData
@@ -450,7 +456,6 @@ export default class GeoJsonLayer extends Layer {
           // not update bounds for every batch, to avoid interrupt user interacts with map while loading the map incrementally
           this.updateMeta({bounds, fixedRadius, featureTypes});
         }
-        // @ts-expect-error TODO fix this
         this.dataToFeature = [...this.dataToFeature, ...dataToFeature];
       }
     } else {
