@@ -2328,14 +2328,7 @@
     through "^2.3.8"
     web-streams-polyfill "^3.2.1"
 
-"@loaders.gl/schema@3.4.14", "@loaders.gl/schema@^3.4.13":
-  version "3.4.14"
-  resolved "https://registry.yarnpkg.com/@loaders.gl/schema/-/schema-3.4.14.tgz#6f145065a2abaf402aa419cfa25ec7f1fdeed487"
-  integrity sha512-r6BEDfUvbvzgUnh/MtkR5RzrkIwo1x1jtPFRTSJVsIZO7arXXlu3blffuv5ppEkKpNZ1Xzd9WtHp/JIkuctsmw==
-  dependencies:
-    "@types/geojson" "^7946.0.7"
-
-"@loaders.gl/schema@4.1.0-alpha.4", "@loaders.gl/schema@^4.1.0-alpha.4":
+"@loaders.gl/schema@3.4.14", "@loaders.gl/schema@4.1.0-alpha.4", "@loaders.gl/schema@^3.4.13", "@loaders.gl/schema@^4.1.0-alpha.4":
   version "4.1.0-alpha.4"
   resolved "https://registry.yarnpkg.com/@loaders.gl/schema/-/schema-4.1.0-alpha.4.tgz#63825d99ac37180823c19240f77941f1cadf7781"
   integrity sha512-eZ76TzxBkFymGgjDn5JYGJommDhc+F4otcR5Op+yHwXP/2RxSjgWhhveaBppTNqzDXVNJaW4WCRguL2ouBYuTQ==
