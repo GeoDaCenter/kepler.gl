@@ -227,6 +227,8 @@ export {default as VerticalToolbar} from './common/vertical-toolbar';
 export {default as ToolbarItem} from './common/toolbar-item';
 export {default as ShareMapUrlModalFactory, SharingUrl} from './modals/share-map-modal';
 export {default as TippyTooltip} from './common/tippy-tooltip';
+export {renderedSize} from './common/data-table/cell-size';
+export type {DataTableProps} from './common/data-table';
 
 // side pane components
 export {default as LayerTypeSelectorFactory} from './side-panel/layer-panel/layer-type-selector';

@@ -7,7 +7,7 @@ import styled, {withTheme} from 'styled-components';
 import classnames from 'classnames';
 import {createSelector} from 'reselect';
 import get from 'lodash.get';
-import debounce from 'lodash.debounce';
+// import debounce from 'lodash.debounce';
 import {ArrowDown} from '../icons';
 
 import {CellSizeCache} from './cell-size';
@@ -485,7 +485,7 @@ function DataTableFactory(HeaderCell: ReturnType<typeof HeaderCellFactory>) {
       this.setState(this.getCellSizeCache());
     };
 
-    scaleCellsToWidth = debounce(this.doScaleCellsToWidth, 300);
+    scaleCellsToWidth = this.doScaleCellsToWidth;
 
     renderDataCell = (columns, isPinned, props: DataTableProps) => {
       const getRowCell = this.props.getRowCell ?? defaultGetRowCell;
@@ -600,6 +600,7 @@ function DataTableFactory(HeaderCell: ReturnType<typeof HeaderCellFactory>) {
         <Container
           className="data-table-container"
           ref={this.root}
+          theme={theme}
           hasCustomScrollBarStyle={hasCustomScrollBarStyle}
         >
           {Object.keys(cellSizeCache).length ? (
