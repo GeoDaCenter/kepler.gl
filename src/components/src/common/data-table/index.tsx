@@ -122,6 +122,9 @@ export const Container = styled.div<ContainerProps>`
       top: 0;
       border-right: 2px solid ${props => props.theme.pinnedGridBorderColor};
     }
+    .filtered-row {
+      background-color: ${props => props.theme.filteredRowBackground};
+    }
     .even-row {
       background-color: ${props => props.theme.evenRowBackground};
     }
@@ -380,6 +383,7 @@ export interface DataTableProps {
   fixedWidth?: number;
   theme?: any;
   dataContainer: DataContainerInterface;
+  filteredIndex?: {};
   fixedHeight?: number;
   colMeta: ColMeta;
   sortColumn: SortColumn;
@@ -405,6 +409,7 @@ function DataTableFactory(HeaderCell: ReturnType<typeof HeaderCellFactory>) {
   class DataTable extends Component<DataTableProps, DataTableState> {
     static defaultProps = {
       dataContainer: null,
+      filteredIndex: {},
       pinnedColumns: [],
       colMeta: {},
       cellSizeCache: {},
@@ -491,7 +496,7 @@ function DataTableFactory(HeaderCell: ReturnType<typeof HeaderCellFactory>) {
       const getRowCell = this.props.getRowCell ?? defaultGetRowCell;
       return cellInfo => {
         const {columnIndex, key, style, rowIndex} = cellInfo;
-        const {dataContainer, colMeta} = props;
+        const {dataContainer, colMeta, filteredIndex} = props;
         const column = columns[columnIndex];
         const isGhost = column.ghost;
 
@@ -500,6 +505,7 @@ function DataTableFactory(HeaderCell: ReturnType<typeof HeaderCellFactory>) {
         const type = isGhost ? null : colMeta[column].type;
 
         const lastRowIndex = dataContainer ? dataContainer.numRows() - 1 : 0;
+        const hasFilteredIndex = Object.keys(filteredIndex ?? {}).length < dataContainer.numRows();
 
         const endCell = columnIndex === columns.length - 1;
         const firstCell = columnIndex === 0;
@@ -509,7 +515,11 @@ function DataTableFactory(HeaderCell: ReturnType<typeof HeaderCellFactory>) {
         const cell = (
           <div
             className={classnames('cell', {
-              [rowIndex % 2 === 0 ? 'even-row' : 'odd-row']: true,
+              [filteredIndex?.[rowIndex] && hasFilteredIndex
+                ? 'filtered-row'
+                : rowIndex % 2 === 0
+                ? 'even-row'
+                : 'odd-row']: true,
               [`row-${rowIndex}`]: true,
               'pinned-cell': isPinned,
               'first-cell': firstCell,

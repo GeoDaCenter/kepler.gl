@@ -395,6 +395,7 @@ const headerCellStatsBackground = '#F8FAFF';
 const headerCellStatsControlBackground = '#EAF0FF';
 const headerCellIconColor = '#666666';
 const cellBorderColor = '#E0E0E0';
+const filteredRowBackground = '#FFFF00';
 const evenRowBackground = '#FFFFFF';
 const oddRowBackground = '#F7F7F7';
 const optionButtonColor = '#6A7485';
@@ -1510,6 +1511,7 @@ export const theme = {
   headerCellStatsControlBackground,
   headerCellIconColor,
   cellBorderColor,
+  filteredRowBackground,
   evenRowBackground,
   oddRowBackground,
   pinnedGridBorderColor,
