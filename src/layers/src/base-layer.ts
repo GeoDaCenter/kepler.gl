@@ -896,11 +896,19 @@ class Layer {
         cMap.set(k, typeof v === 'string' ? hexToRgb(v) : v);
       });
 
-      const scale = SCALE_FUNC[SCALE_TYPES.ordinal]()
+      // custom threshold color scale
+      if (colorScale === SCALE_TYPES.custom) {
+        return SCALE_FUNC[SCALE_TYPES.custom]()
+          .domain(cMap.keys())
+          .range(cMap.values())
+          .unknown(cMap.get(UNKNOWN_COLOR_KEY) || NO_VALUE_COLOR);
+      }
+
+      // custom ordinal (unique values) color scale
+      return SCALE_FUNC[SCALE_TYPES.ordinal]()
         .domain(cMap.keys())
         .range(cMap.values())
         .unknown(cMap.get(UNKNOWN_COLOR_KEY) || NO_VALUE_COLOR);
-      return scale;
     }
     return this.getVisChannelScale(colorScale, colorDomain, colorRange.colors.map(hexToRgb));
   }

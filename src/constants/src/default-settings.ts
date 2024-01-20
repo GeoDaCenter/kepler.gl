@@ -8,6 +8,7 @@ import {
   scaleQuantize,
   scaleQuantile,
   scaleOrdinal,
+  scaleThreshold,
   scaleSqrt,
   scaleLog,
   scalePoint
@@ -391,7 +392,10 @@ export const SCALE_TYPES = keyMirror({
   log: null,
 
   // ordinal domain to linear range
-  point: null
+  point: null,
+
+  // custom domain to custom range
+  custom: null
 });
 
 export const SCALE_FUNC = {
@@ -401,7 +405,8 @@ export const SCALE_FUNC = {
   [SCALE_TYPES.ordinal]: scaleOrdinal,
   [SCALE_TYPES.sqrt]: scaleSqrt,
   [SCALE_TYPES.log]: scaleLog,
-  [SCALE_TYPES.point]: scalePoint
+  [SCALE_TYPES.point]: scalePoint,
+  [SCALE_TYPES.custom]: scaleThreshold
 };
 
 export const ALL_FIELD_TYPES = keyMirror({
@@ -586,7 +591,7 @@ export const AGGREGATION_TYPE_OPTIONS: {id: string; label: string}[] = Object.en
 }));
 
 export const linearFieldScaleFunctions = {
-  [CHANNEL_SCALES.color]: [SCALE_TYPES.quantize, SCALE_TYPES.quantile],
+  [CHANNEL_SCALES.color]: [SCALE_TYPES.quantize, SCALE_TYPES.quantile, SCALE_TYPES.custom],
   [CHANNEL_SCALES.radius]: [SCALE_TYPES.sqrt],
   [CHANNEL_SCALES.size]: [SCALE_TYPES.linear, SCALE_TYPES.sqrt, SCALE_TYPES.log]
 };
