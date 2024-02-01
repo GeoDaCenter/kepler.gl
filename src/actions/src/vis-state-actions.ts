@@ -20,7 +20,8 @@ import {
   Filter,
   ParsedConfig,
   ParsedLayer,
-  EffectPropsPartial
+  EffectPropsPartial,
+  Field
 } from '@kepler.gl/types';
 // TODO - import LoaderObject type from @loaders.gl/core when supported
 // TODO - import LoadOptions type from @loaders.gl/core when supported
@@ -717,6 +718,32 @@ export function copyTableColumn(
     type: ActionTypes.COPY_TABLE_COLUMN,
     dataId,
     column
+  };
+}
+
+export type AddTableColumnUpdaterAction = {
+  dataId: string;
+  field: Field;
+  values: unknown[];
+};
+/**
+ * Add new column to dataset, for table display
+ * @param dataId
+ * @param field
+ * @param values
+ * @returns action
+ * @public
+ */
+export function addTableColumn(
+  dataId: string,
+  field: Field,
+  values: unknown[]
+): Merge<AddTableColumnUpdaterAction, {type: typeof ActionTypes.ADD_TABLE_COLUMN}> {
+  return {
+    type: ActionTypes.ADD_TABLE_COLUMN,
+    dataId,
+    field,
+    values
   };
 }
 

@@ -2775,6 +2775,42 @@ export function copyTableColumnUpdater(
 }
 
 /**
+ * Add new field to table with values, if field already exists, update the column values
+ * @memberof visStateUpdaters
+ * @public
+ */
+export function addTableColumnUpdater(
+  state: VisState,
+  {dataId, field, values}: VisStateActions.AddTableColumnUpdaterAction
+): VisState {
+  const dataset = state.datasets[dataId];
+  if (!dataset) {
+    return state;
+  }
+  const dataContainer = dataset.dataContainer;
+  let newDataset = dataset;
+
+  // check if field already exists
+  const fieldIdx = dataset.fields.findIndex(f => f.name === field.name);
+  if (fieldIdx >= 0) {
+    // update the column values
+    if (dataContainer && dataContainer.updateColumn) {
+      dataContainer.updateColumn(fieldIdx, values);
+    }
+    newDataset = copyTableAndUpdate(dataset);
+  } else {
+    // add new column with values
+    const newFields = [...dataset.fields, field];
+    if (dataContainer && dataContainer.addColumn) {
+      dataContainer.addColumn(values, field);
+    }
+    newDataset = copyTableAndUpdate(dataset, { fields: newFields });
+  }
+
+  return pick_('datasets')(merge_({[dataId]: newDataset}))(state);
+}
+
+/**
  * Set display format from columns from user selection
  * @memberof visStateUpdaters
  * @public

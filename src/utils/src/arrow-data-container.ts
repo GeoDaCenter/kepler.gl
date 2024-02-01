@@ -75,6 +75,17 @@ export class ArrowDataContainer implements DataContainerInterface {
     // this._colData = this._cols.map(c => c.toArray());
   }
 
+  addColumn(values: unknown[], field: Field) {
+    const newColumn = arrow.vectorFromArray(values);
+    this._cols.push(newColumn);
+    this._numColumns++;
+    this._fields.push(field);
+  }
+
+  updateColumn(columnIndex: number, values: unknown[]) {
+    this._cols[columnIndex] = arrow.vectorFromArray(values);
+  }
+
   numChunks(): number {
     return this._numChunks;
   }

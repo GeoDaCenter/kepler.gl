@@ -19,6 +19,16 @@ export interface DataContainerInterface {
   update?(updateData: any[]): void;
 
   /**
+   * Adds a new column to the data container.
+   */
+  addColumn?(columnValues: unknown[], field: Field): void;
+
+  /**
+   * Update the values of a column
+   */
+  updateColumn?(columnIndex: number, columnValues: unknown[]): void;
+
+  /**
    * Returns the number of rows in the data container.
    * @returns Number of rows in the data container.
    */

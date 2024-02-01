@@ -129,6 +129,8 @@ const actionHandler = {
 
   [ActionTypes.COPY_TABLE_COLUMN]: visStateUpdaters.copyTableColumnUpdater,
 
+  [ActionTypes.ADD_TABLE_COLUMN]: visStateUpdaters.addTableColumnUpdater,
+
   [ActionTypes.SET_COLUMN_DISPLAY_FORMAT]: visStateUpdaters.setColumnDisplayFormatUpdater,
 
   [ActionTypes.NEXT_FILE_BATCH]: visStateUpdaters.nextFileBatchUpdater,
