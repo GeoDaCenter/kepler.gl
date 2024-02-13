@@ -3,7 +3,7 @@
 
 // libraries
 import React, {Component, createRef, useMemo} from 'react';
-import styled, {withTheme} from 'styled-components';
+import styled, {ThemeProvider, withTheme} from 'styled-components';
 import {Map, MapRef} from 'react-map-gl/maplibre';
 import {PickInfo} from '@deck.gl/core/lib/deck';
 import DeckGL from '@deck.gl/react';
@@ -1001,7 +1001,7 @@ export default function MapContainerFactory(
         return null;
       }
       return (
-        <>
+        <ThemeProvider theme={theme}>
           <MapControl
             mapState={mapState}
             datasets={datasets}
@@ -1081,7 +1081,7 @@ export default function MapContainerFactory(
               datasetAttributions={datasetAttributions}
             />
           ) : null}
-        </>
+        </ThemeProvider>
       );
     }
 
