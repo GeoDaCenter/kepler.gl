@@ -58,7 +58,7 @@ export function getGeojsonLayerMetaFromArrow({
           chunkOffset: geoColumn.data[0].length * chunkIndex
         }
       : {}),
-    triangulate: true,
+    triangulate: false,
     calculateMeanCenters: true
   };
   // create binary data from arrow data for GeoJsonLayer

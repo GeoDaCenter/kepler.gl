@@ -73,6 +73,9 @@ export type LayerBaseConfig = {
   dataId: string;
   label: string;
   color: RGBColor;
+  colorScale?: VisualChannelScale;
+  colorField?: VisualChannelField;
+  colorDomain?: VisualChannelDomain;
 
   columns: LayerColumns;
   isVisible: boolean;
@@ -459,9 +462,9 @@ class Layer {
 
       // TODO: refactor this into separate visual Channel config
       // color by field, domain is set by filters, field, scale type
-      colorField: null,
-      colorDomain: [0, 1],
-      colorScale: SCALE_TYPES.quantile,
+      colorField: props.colorField || null,
+      colorDomain: props.colorDomain || [0, 1],
+      colorScale: props.colorScale || SCALE_TYPES.quantile,
 
       // color by size, domain is set by filters, field, scale type
       sizeDomain: [0, 1],
