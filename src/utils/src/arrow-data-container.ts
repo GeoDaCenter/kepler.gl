@@ -99,7 +99,10 @@ export class ArrowDataContainer implements DataContainerInterface {
   }
 
   valueAt(rowIndex: number, columnIndex: number): any {
-    // return this._colData[columnIndex][rowIndex];
+    if (this._cols[columnIndex].type.typeId === arrow.Type.List) {
+      // Don't show geometry (list) data in the table
+      return '[List]';
+    }
     return this._cols[columnIndex].get(rowIndex);
   }
 

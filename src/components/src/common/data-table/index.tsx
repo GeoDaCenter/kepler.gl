@@ -346,7 +346,7 @@ export const TableSection = ({
                 {...headerGridProps}
                 {...gridDimension}
                 height={headerGridProps.height + browserScrollBarWidth}
-                width={headerGridWidth}
+                width={headerGridWidth + browserScrollBarWidth}
                 scrollLeft={scrollLeft}
                 onScroll={onScroll}
               />

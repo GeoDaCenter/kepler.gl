@@ -2794,7 +2794,7 @@ export function addTableColumnUpdater(
   const fieldIdx = dataset.fields.findIndex(f => f.name === field.name);
   if (fieldIdx >= 0) {
     // update the column values
-    if (dataContainer && dataContainer.updateColumn) {
+    if (dataContainer && dataContainer.updateColumn && values) {
       dataContainer.updateColumn(fieldIdx, values);
     }
     newDataset = copyTableAndUpdate(dataset);
