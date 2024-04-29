@@ -203,7 +203,7 @@ export const BACKGROUND_LAYER_GROUP: DEFAULT_LAYER_GROUP = {
 export const DEFAULT_LAYER_GROUPS: DEFAULT_LAYER_GROUP[] = [
   {
     slug: 'label',
-    filter: ({id}) => id.match(/(?=(label|place-|poi-))/),
+    filter: ({id}) => id.match(/(?=(label|place_|poi_))/),
     defaultVisibility: true,
     isVisibilityToggleAvailable: true,
     isMoveToTopAvailable: true,
