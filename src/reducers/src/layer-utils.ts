@@ -311,6 +311,8 @@ export type ComputeDeckLayersProps = {
       feature: Feature | null,
       selectionContext?: FeatureSelectionContext
     ) => any;
+    setPolygonFilterLayer: (layer: Layer, feature: Feature) => void;
+    setBrushAndLink: (layers: Layer[], editFeature: Feature) => void;
     featureCollection: {
       type: string;
       features: Feature[];
@@ -423,7 +425,8 @@ export function computeDeckLayers(
   if (editorInfo) {
     editorLayer.push(
       getEditorLayer({
-        ...editorInfo
+        ...editorInfo,
+        layers
       })
     );
   }

@@ -711,7 +711,7 @@ export default function MapContainerFactory(
 
       const editorFeatureSelectedIndex = this.selectedPolygonIndexSelector(this.props);
 
-      const {setFeatures, onLayerClick, setSelectedFeature} = visStateActions;
+      const {setFeatures, onLayerClick, setSelectedFeature, setPolygonFilterLayer, setBrushAndLink} = visStateActions;
 
       const generateDeckGLLayersMethod = generateDeckGLLayers ?? computeDeckLayers;
       const deckGlLayers = generateDeckGLLayersMethod(
@@ -732,6 +732,9 @@ export default function MapContainerFactory(
                 editorMenuActive,
                 onSetFeatures: setFeatures,
                 setSelectedFeature,
+                // the following 2 lines are for GeoDa.AI brush and link
+                setPolygonFilterLayer,
+                setBrushAndLink,
                 featureCollection: this.featureCollectionSelector(this.props),
                 selectedFeatureIndexes: this.selectedFeatureIndexArraySelector(
                   editorFeatureSelectedIndex

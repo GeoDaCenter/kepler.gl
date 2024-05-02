@@ -1314,6 +1314,15 @@ export function setPolygonFilterLayer(
   };
 }
 
+// BrushLink action used by GeoDa.AI only
+export function setBrushAndLink(layers: Layer[], editFeature: Feature) {
+  return {
+    type: 'BRUSH_LINK_FROM_KEPLER',
+    layers,
+    editFeature
+  };
+}
+
 export type SetSelectedFeatureUpdaterAction = {
   feature: Feature | null;
   selectionContext?: FeatureSelectionContext;
