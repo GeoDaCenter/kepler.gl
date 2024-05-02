@@ -205,7 +205,7 @@ export const DEFAULT_ANIMATION_CONFIG: AnimationConfig = {
 };
 
 export const DEFAULT_EDITOR: Editor = {
-  mode: EDITOR_MODES.DRAW_POLYGON,
+  mode: EDITOR_MODES.DRAW_RECTANGLE,
   features: [],
   selectedFeature: null,
   visible: true
@@ -2583,7 +2583,8 @@ export const setSelectedFeatureUpdater = (
   {feature, selectionContext}: VisStateActions.SetSelectedFeatureUpdaterAction
 ): VisState => {
   // add bbox for polygon filter to speed up filtering
-   if (feature && feature.properties) feature.properties.bbox = bbox(feature);
+  if (feature && feature.properties) feature.properties.bbox = bbox(feature);
+
   return {
     ...state,
     editor: {
@@ -2644,6 +2645,10 @@ export function setPolygonFilterLayerUpdater(
   const {layer, feature} = payload;
   const filterId = getFilterIdInFeature(feature);
 
+  // for applying polygon filter on multiple layers at once
+  const layers = Array.isArray(layer) ? layer : [layer];
+  let newLayerIds: string[] = [];
+
   // let newFilter = null;
   let filterIdx;
   let newLayerId = [layer.id];
@@ -2681,6 +2686,9 @@ export function setPolygonFilterLayerUpdater(
       ? // if layer is included, remove it
         layerId.filter(l => l !== layer.id)
       : [...layerId, layer.id];
+
+    // for applying polygon filter on multiple layers at once
+    newLayerIds = layerId.filter(l => !layers.map(l => l.id).includes(l));
   } else {
     // if we haven't create the polygon filter, create it
     const newFilter = generatePolygonFilter([], feature);
@@ -2696,12 +2704,15 @@ export function setPolygonFilterLayerUpdater(
         selectedFeature: newFilter.value
       }
     };
+
+    // for applying polygon filters on multiple layers at once
+    newLayerIds = layers.map(l => l.id);
   }
 
   return setFilterUpdater(newState, {
     idx: filterIdx,
     prop: 'layerId',
-    value: newLayerId
+    value: newLayerIds
   });
 }
 

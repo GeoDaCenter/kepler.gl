@@ -19,6 +19,7 @@ import {EDIT_TYPES} from './constants';
 import {LINE_STYLE, FEATURE_STYLE, EDIT_HANDLE_STYLE} from './feature-styles';
 import {ModifyModeExtended} from './modify-mode-extended';
 import {isDrawingActive} from './editor-layer-utils';
+import Layer from '../base-layer';
 
 const DEFAULT_COMPOSITE_MODE = new CompositeMode([new TranslateMode(), new ModifyModeExtended()]);
 
@@ -33,6 +34,8 @@ export type GetEditorLayerProps = {
     features: Feature[];
   };
   selectedFeatureIndexes: number[];
+  setPolygonFilterLayer?: (layer: Layer, feature: Feature) => any;
+  layers?: Layer[];
 };
 
 /**
@@ -53,7 +56,9 @@ export function getEditorLayer({
   setSelectedFeature,
   featureCollection,
   selectedFeatureIndexes,
-  viewport
+  viewport,
+  setPolygonFilterLayer,
+  layers
 }: GetEditorLayerProps): DeckLayer<DeckLayerProps> {
   const {mode: editorMode} = editor;
 
@@ -97,6 +102,8 @@ export function getEditorLayer({
             lastFeature.id = generateHashId(6);
             onSetFeatures(updatedData.features);
             setSelectedFeature(lastFeature);
+            // @ts-ignore set polygon filter for all layers
+            setPolygonFilterLayer?.(layers, lastFeature);
           }
           break;
         case EDIT_TYPES.ADD_POSITION:

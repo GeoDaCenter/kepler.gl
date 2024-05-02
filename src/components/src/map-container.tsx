@@ -711,7 +711,7 @@ export default function MapContainerFactory(
 
       const editorFeatureSelectedIndex = this.selectedPolygonIndexSelector(this.props);
 
-      const {setFeatures, onLayerClick, setSelectedFeature} = visStateActions;
+      const {setFeatures, onLayerClick, setSelectedFeature, setPolygonFilterLayer} = visStateActions;
 
       const generateDeckGLLayersMethod = generateDeckGLLayers ?? computeDeckLayers;
       const deckGlLayers = generateDeckGLLayersMethod(
@@ -732,6 +732,7 @@ export default function MapContainerFactory(
                 editorMenuActive,
                 onSetFeatures: setFeatures,
                 setSelectedFeature,
+                setPolygonFilterLayer,
                 featureCollection: this.featureCollectionSelector(this.props),
                 selectedFeatureIndexes: this.selectedFeatureIndexArraySelector(
                   editorFeatureSelectedIndex
