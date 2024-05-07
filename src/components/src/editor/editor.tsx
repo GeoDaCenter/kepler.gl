@@ -45,6 +45,7 @@ interface EditorProps {
   onSetEditorMode: (m: any) => void;
   onDeleteFeature: (f: Feature) => any;
   onTogglePolygonFilter: (l: Layer, f: Feature) => any;
+  setBrushAndLink?: (layers: Layer[], editFeature: Feature) => any;
 }
 
 export type PortalEditorProps = FeatureActionPanelProps & {
@@ -165,6 +166,7 @@ export default function EditorFactory(
       const {selectedFeature} = editor;
       if (selectedFeature) {
         this.props.onDeleteFeature(selectedFeature);
+        this.props.setBrushAndLink?.(this.props.layers, selectedFeature);
       }
     };
 
