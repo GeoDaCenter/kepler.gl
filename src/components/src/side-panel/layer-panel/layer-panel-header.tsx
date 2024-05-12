@@ -99,7 +99,7 @@ const StyledLayerPanelHeader = styled(StyledPanelHeader)`
   align-items: stretch;
 
   .layer__remove-layer {
-    opacity: 0;
+    opacity: 1;
   }
 
   .layer__drag-handle__placeholder {
@@ -155,7 +155,7 @@ type StyledPanelHeaderHiddenActionsProps = {
 const StyledPanelHeaderHiddenActions = styled.div.attrs({
   className: 'layer-panel__header__actions__hidden'
 })<StyledPanelHeaderHiddenActionsProps>`
-  opacity: 0;
+  opacity: 1;
   display: flex;
   align-items: center;
   background-color: ${props =>
