@@ -2712,7 +2712,7 @@ export function setPolygonFilterLayerUpdater(
   return setFilterUpdater(newState, {
     idx: filterIdx,
     prop: 'layerId',
-    value: newLayerIds
+    value: newLayerIds || newLayerId
   });
 }
 
