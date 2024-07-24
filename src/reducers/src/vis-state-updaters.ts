@@ -2368,10 +2368,17 @@ export function addDefaultLayers(
   datasets: Datasets
 ): {state: VisState; newLayers: Layer[]} {
   const empty: Layer[] = [];
-  const defaultLayers = Object.values(datasets).reduce((accu: Layer[], dataset) => {
+  let defaultLayers = Object.values(datasets).reduce((accu: Layer[], dataset) => {
     const foundLayers = findDefaultLayer(dataset, state.layerClasses);
     return foundLayers && foundLayers.length ? accu.concat(foundLayers) : accu;
   }, empty);
+
+  // For GeoDa.AI only: check if there is geojson layer in defaultLayers
+  let newLayer = defaultLayers.find(l => l.type === 'geojson');
+  if (!newLayer) newLayer = defaultLayers.find(l => l.type === 'point');
+  if (!newLayer) newLayer = defaultLayers.find(l => l.type === 'line');
+  // replace defaultLayers with [newLayers]
+  if (newLayer) defaultLayers = [newLayer];
 
   return {
     state: {
