@@ -46,7 +46,7 @@ export function createNewDataEntry(
   {info, data, ...opts}: ProtoDataset,
   datasets: Datasets = {}
 ): Datasets {
-  const validatedData = validateInputData(data);
+  const validatedData = validateInputData(data, info);
   if (!validatedData) {
     return {};
   }

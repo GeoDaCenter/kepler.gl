@@ -28,6 +28,7 @@ import {notNullorUndefined, getFormatter} from './data-utils';
 import {getFormatValue} from './format';
 import {range} from 'd3-array';
 import {hexToRgb} from './color-utils';
+import {Vector} from 'apache-arrow';
 
 // apply a color for each dataset
 // to use as label colors
@@ -250,7 +251,10 @@ const IGNORE_DATA_TYPES = Object.keys(AnalyzerDATA_TYPES).filter(
 /**
  * Validate input data, adding missing field types, rename duplicate columns
  */
-export function validateInputData(data: ProtoDataset['data']): ProcessorResult {
+export function validateInputData(
+  data: ProtoDataset['data'],
+  info?: ProtoDataset['info']
+): ProcessorResult {
   if (!isPlainObject(data)) {
     assert('addDataToMap Error: dataset.data cannot be null');
     return null;
@@ -261,7 +265,7 @@ export function validateInputData(data: ProtoDataset['data']): ProcessorResult {
     assert('addDataToMap Error: expect dataset.data.rows to be an array');
     return null;
   }
-
+  const isArrow = info?.format === 'arrow';
   const {fields, rows, cols} = data;
 
   // check if all fields has name, format and type
@@ -289,7 +293,9 @@ export function validateInputData(data: ProtoDataset['data']): ProcessorResult {
 
     // check time format is correct based on first 10 not empty element
     if (f.type === ALL_FIELD_TYPES.timestamp) {
-      const sample = findNonEmptyRowsAtField(rows, i, 10).map(r => ({ts: r[i]}));
+      const sample = isArrow
+        ? findNonEmptyRowsFromArrow(cols?.[i], 10)?.map(r => ({ts: r}))
+        : findNonEmptyRowsAtField(rows, i, 10).map(r => ({ts: r[i]}));
       const analyzedType = Analyzer.computeColMeta(sample)[0];
       return analyzedType && analyzedType.category === 'TIME' && analyzedType.format === f.format;
     }
@@ -303,10 +309,13 @@ export function validateInputData(data: ProtoDataset['data']): ProcessorResult {
 
   // if any field has missing type, recalculate it for everyone
   // because we simply lost faith in humanity
-  const sampleData = getSampleForTypeAnalyze({
-    fields: fields.map(f => f.name),
-    rows
-  });
+  const sampleData =
+    isArrow && cols
+      ? getSampleForTypeAnalyzeFromArrow({cols})
+      : getSampleForTypeAnalyze({
+          fields: fields.map(f => f.name),
+          rows
+        });
   const fieldOrder = fields.map(f => f.name);
   const meta = getFieldsFromData(sampleData, fieldOrder);
   const updatedFields = fields.map((f, i) => ({
@@ -316,7 +325,19 @@ export function validateInputData(data: ProtoDataset['data']): ProcessorResult {
     analyzerType: meta[i].analyzerType
   }));
 
-  return {fields: updatedFields, rows};
+  return {fields: updatedFields, rows, cols};
+}
+
+function findNonEmptyRowsFromArrow(col: Vector, total: number): any[] {
+  const sample: any[] = [];
+  let i = 0;
+  while (sample.length < total && i < col.length) {
+    if (notNullorUndefined(col.get(i))) {
+      sample.push(col.get(i));
+    }
+    i++;
+  }
+  return sample;
 }
 
 function findNonEmptyRowsAtField(rows: unknown[][], fieldIdx: number, total: number): any[] {
@@ -330,6 +351,38 @@ function findNonEmptyRowsAtField(rows: unknown[][], fieldIdx: number, total: num
   }
   return sample;
 }
+
+function getSampleForTypeAnalyzeFromArrow({
+  cols,
+  sampleCount = 50
+}: {
+  cols: Vector[];
+  sampleCount?: number;
+}): RowData {
+  const total = Math.min(sampleCount, cols.length);
+  const sample = range(0, total, 1).map(d => ({}));
+
+  cols.forEach((col, colIdx) => {
+    let i = 0;
+    let j = 0;
+
+    while (j < total) {
+      if (i >= col.length) {
+        sample[j][colIdx] = null;
+        j++;
+      } else if (notNullorUndefined(col.get(i))) {
+        sample[j][colIdx] = col.get(i);
+        j++;
+        i++;
+      } else {
+        i++;
+      }
+    }
+  });
+
+  return sample;
+}
+
 /**
  * Getting sample data for analyzing field type.
  */
