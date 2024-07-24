@@ -222,7 +222,7 @@ export function arrowDataTypeToFieldType(arrowType: arrow.DataType): string {
     return ALL_FIELD_TYPES.date;
   } else if (arrow.DataType.isTimestamp(arrowType) || arrow.DataType.isTime(arrowType)) {
     return ALL_FIELD_TYPES.timestamp;
-  } else if (arrow.DataType.isFloat(arrowType)) {
+  } else if (arrow.DataType.isFloat(arrowType) || arrow.DataType.isDecimal(arrowType)) {
     return ALL_FIELD_TYPES.real;
   } else if (arrow.DataType.isInt(arrowType)) {
     return ALL_FIELD_TYPES.integer;
@@ -259,7 +259,7 @@ export function arrowDataTypeToAnalyzerDataType(
     return AnalyzerDATA_TYPES.DATE;
   } else if (arrow.DataType.isTimestamp(arrowType) || arrow.DataType.isTime(arrowType)) {
     return AnalyzerDATA_TYPES.DATETIME;
-  } else if (arrow.DataType.isFloat(arrowType)) {
+  } else if (arrow.DataType.isFloat(arrowType) || arrow.DataType.isDecimal(arrowType)) {
     return AnalyzerDATA_TYPES.FLOAT;
   } else if (arrow.DataType.isInt(arrowType)) {
     return AnalyzerDATA_TYPES.INT;

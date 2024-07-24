@@ -18,8 +18,8 @@ export function getQuantileDomain(
   sortFunc?: sort
 ): number[] {
   const values = typeof valueAccessor === 'function' ? data.map(valueAccessor) : data;
-
-  return values.filter(notNullorUndefined).sort(sortFunc);
+  // in case values are bigints, we need to convert them to numbers
+  return values.map(Number).filter(notNullorUndefined).sort(sortFunc);
 }
 
 /**
