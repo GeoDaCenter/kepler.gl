@@ -2373,7 +2373,7 @@ export function addDefaultLayers(
     return foundLayers && foundLayers.length ? accu.concat(foundLayers) : accu;
   }, empty);
 
-  // For GeoDa.AI only: check if there is geojson layer in defaultLayers
+  // For GeoDa.AI only: create one of the following layers only
   let newLayer = defaultLayers.find(l => l.type === 'geojson');
   if (!newLayer) newLayer = defaultLayers.find(l => l.type === 'point');
   if (!newLayer) newLayer = defaultLayers.find(l => l.type === 'line');

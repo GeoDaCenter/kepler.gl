@@ -58,7 +58,6 @@ export const DatasetModalTab = styled.div<DatasetModalTabProps>`
   padding: 0 5px;
 
   :hover {
-    border-bottom: 3px solid black;
   }
 `;
 
