@@ -88,10 +88,11 @@ const SINGLE_COLOR_DOMAIN = [''];
 export type SingleColorLegendProps = {
   width: number;
   color: string;
+  legendRowHeight?: number;
 };
 
 /** @type {typeof import('./map-legend').SingleColorLegend} */
-export const SingleColorLegend: React.FC<SingleColorLegendProps> = React.memo(({width, color}) => (
+export const SingleColorLegend: React.FC<SingleColorLegendProps> = React.memo(({width, color, legendRowHeight}) => (
   <ColorLegend
     scaleType="ordinal"
     displayLabel={false}
@@ -99,6 +100,7 @@ export const SingleColorLegend: React.FC<SingleColorLegendProps> = React.memo(({
     fieldType={null}
     range={{colors: [rgb(...color).toString()]}}
     width={width}
+    legendRowHeight={legendRowHeight}
   />
 ));
 
@@ -138,6 +140,7 @@ export const LayerColorLegend: React.FC<LayerColorLegendProps> = React.memo(
                 <SingleColorLegend
                   color={config.visConfig[property] || config[property] || config.color}
                   width={width}
+                  legendRowHeight={description.label.includes('.stroke') ? 4 : 10}
                 />
               )}
             </div>

@@ -212,7 +212,7 @@ function TooltipConfigFactory(
             />
           )
         )}
-        <CompareSwitchWrapper>
+        <CompareSwitchWrapper className="comparison-switch">
           <FormattedMessage id="compare.modeLabel" />
           <Switch
             checked={config.compareMode}
@@ -227,7 +227,7 @@ function TooltipConfigFactory(
             secondary
           />
         </CompareSwitchWrapper>
-        <SidePanelSection>
+        <SidePanelSection className="comparison-type">
           <PanelLabel>
             <FormattedMessage id="compare.typeLabel" />
           </PanelLabel>

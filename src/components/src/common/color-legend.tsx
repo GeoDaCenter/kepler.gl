@@ -84,6 +84,7 @@ interface ColorLegendProps {
   range?: RangeType;
   labelFormat?: Function;
   displayLabel?: boolean;
+  legendRowHeight?: number;
 }
 
 export default class ColorLegend extends Component<ColorLegendProps> {
@@ -142,7 +143,7 @@ export default class ColorLegend extends Component<ColorLegendProps> {
   );
 
   render() {
-    const {width, displayLabel = true} = this.props;
+    const {width, displayLabel = true, legendRowHeight} = this.props;
 
     const legends = this.legendsSelector(this.props);
     const height = legends.data.length * (ROW_H + GAP);
@@ -157,6 +158,7 @@ export default class ColorLegend extends Component<ColorLegendProps> {
               displayLabel={displayLabel}
               color={color}
               idx={idx}
+              height={legendRowHeight}
             />
           ))}
         </svg>
@@ -165,10 +167,10 @@ export default class ColorLegend extends Component<ColorLegendProps> {
   }
 }
 
-export const LegendRow = ({label = '', displayLabel, color, idx}) => (
-  <g transform={`translate(0, ${idx * (ROW_H + GAP)})`}>
-    <rect width={RECT_W} height={ROW_H} style={{fill: color}} />
-    <text x={RECT_W + 8} y={ROW_H - 1}>
+export const LegendRow = ({label = '', displayLabel, color, idx, height = ROW_H}) => (
+  <g transform={`translate(0, ${idx * (height + GAP)})`}>
+    <rect width={RECT_W} height={height} style={{fill: color}} />
+    <text x={RECT_W + 8} y={height - 1}>
       {displayLabel ? label?.toString() ?? 'N/A' : ''}
     </text>
   </g>
